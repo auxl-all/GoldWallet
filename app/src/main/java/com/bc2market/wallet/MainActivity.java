@@ -66,8 +66,12 @@ public final class MainActivity extends Activity {
     }
 
     private void launchQrScanner() {
-        new IntentIntegrator(this).setDesiredBarcodeFormats(IntentIntegrator.QR_CODE).setPrompt("Scan a BC2 address or connection request")
-            .setBeepEnabled(false).setOrientationLocked(false).initiateScan();
+        try {
+            new IntentIntegrator(this).setCaptureActivity(QrCaptureActivity.class).setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+                .setPrompt("Scan a BC2 address or connection request").setBeepEnabled(false).setOrientationLocked(false).initiateScan();
+        } catch (RuntimeException error) {
+            bridge.finishQrError("Unable to open the QR scanner. Check the camera permission and try again.");
+        }
     }
 
     @Override protected void onNewIntent(Intent intent) {

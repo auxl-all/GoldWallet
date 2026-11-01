@@ -11,6 +11,7 @@
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
+        android:hardwareAccelerated="true"
         android:icon="@drawable/bc2_wallet_icon"
         android:label="BC2 Wallet"
         android:supportsRtl="true"
@@ -31,5 +32,11 @@
                 <data android:scheme="bc2connect" android:host="connect" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".QrCaptureActivity"
+            android:exported="false"
+            android:hardwareAccelerated="true"
+            android:screenOrientation="unspecified"
+            android:stateNotNeeded="true" />
     </application>
 </manifest>
