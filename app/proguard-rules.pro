@@ -1,0 +1,1 @@
+-keepclassmembers class com.bc2market.wallet.NativeBridge { @android.webkit.JavascriptInterface <methods>; }

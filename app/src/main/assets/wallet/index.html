@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07070d">
+  <meta name="robots" content="noindex,nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src wss://electrum.bc2market.com; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <title>BC2 Wallet · Mainnet</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="app-header">
+    <button id="home-wallet" class="brand" aria-label="Wallet home"><img src="icon.svg" alt=""><strong>BC2</strong></button>
+    <nav aria-label="Wallet controls">
+      <button id="history-shortcut" class="icon-button" aria-label="Recent transactions">☷</button>
+      <button id="quick-sync" class="icon-button" aria-label="Synchronize wallet">↻</button>
+      <button id="open-settings" class="icon-button" aria-label="Wallet settings">⚙</button>
+    </nav>
+  </header>
+  <main>
+    <section class="warning"><strong>BitcoinII Mainnet hot wallet.</strong> Start with a small amount. Keep the recovery phrase offline. Never import a phrase that also controls BTC or another wallet.</section>
+    <section id="setup" data-view hidden class="card auth-card">
+      <p class="eyebrow">NEW WALLET</p><h1>Your keys. Your BC2.</h1>
+      <p>Create a separate 12-word BitcoinII Mainnet wallet or restore a compatible BIP84 phrase.</p>
+      <label>Password <small>12 characters minimum</small><input id="setup-password" type="password" autocomplete="new-password" minlength="12"></label>
+      <label>Confirm password<input id="setup-confirm" type="password" autocomplete="new-password" minlength="12"></label>
+      <button id="create" class="primary">Create Mainnet wallet</button>
+      <div class="divider">or restore</div>
+      <label>12-word recovery phrase<textarea id="restore-phrase" rows="4" autocomplete="off" spellcheck="false"></textarea></label>
+      <button id="restore">Restore Mainnet wallet</button>
+    </section>
+    <section id="unlock" data-view hidden class="card auth-card">
+      <div class="auth-mark" aria-hidden="true"><span>⌾</span></div>
+      <p class="eyebrow">WELCOME BACK</p><h1>Unlock your wallet</h1>
+      <p class="auth-copy">Your encrypted wallet stays on this device. Authenticate to continue.</p>
+      <label class="password-label" for="unlock-password">Wallet password</label>
+      <div class="password-control"><input id="unlock-password" type="password" autocomplete="current-password" placeholder="Enter your password"><button id="toggle-password" type="button" aria-label="Show password">Show</button></div>
+      <button id="unlock" class="primary auth-primary">Unlock wallet</button>
+      <button id="unlock-biometric" class="biometric-button" hidden><span aria-hidden="true">◎</span> Unlock with fingerprint</button>
+      <p class="auth-footnote">Device authentication may use fingerprint, face or screen lock, depending on your phone.</p>
+      <details class="danger-zone"><summary>Wallet options</summary><button id="remove" class="danger">Remove wallet from device</button></details>
+    </section>
+    <section id="wallet" data-view hidden>
+      <div id="backup" hidden class="card backup"><p class="eyebrow">RECOVERY PHRASE</p><h2>Write it down now</h2><code id="backup-phrase"></code><p>Anyone with these words controls your Mainnet BC2. Store them offline.</p></div>
+      <section id="wallet-home" data-wallet-panel>
+        <p class="wallet-name">WALLET 1 <span>MAINNET</span></p>
+        <div class="balance-card"><span>BALANCE</span><strong id="balance">—</strong><b>BC2</b><small id="pending-balance">Not synchronized</small></div>
+        <div class="wallet-actions"><button id="open-send" class="primary">Send</button><button id="open-receive">Receive</button></div>
+        <div class="section-title"><span>YOUR ADDRESS</span><button id="show-receive">Show QR</button></div>
+        <button id="copy-address" class="address-card"><code id="address"></code><small>Tap to copy</small></button>
+        <div class="section-title"><span>RECENT TRANSACTIONS</span><button id="refresh-history">Refresh</button></div>
+        <div class="transaction-card"><ul id="history" class="history"><li>No synchronized transactions.</li></ul></div>
+      </section>
+      <section id="wallet-send" data-wallet-panel hidden class="wallet-screen">
+        <p class="eyebrow">MAINNET</p><h1>SEND BC2</h1>
+        <label>Recipient address<input id="send-recipient" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="bc1q… or 1…"></label>
+        <label>Amount (BC2)<input id="send-amount" inputmode="decimal" autocomplete="off" placeholder="0.00"></label>
+        <div class="fee-line"><span>Network fee</span><strong>Calculated during review</strong></div>
+        <button id="review-send" class="primary">Review Transaction</button>
+        <div id="send-review" class="review" hidden>
+          <div class="row"><span>Recipient</span><code id="review-recipient"></code></div>
+          <div class="row"><span>Amount</span><strong id="review-amount"></strong></div>
+          <div class="row"><span>Network fee</span><strong id="review-fee"></strong></div>
+          <div class="row"><span>Change back to this wallet</span><strong id="review-change"></strong></div>
+          <div class="row"><span>Transaction ID</span><code id="review-txid"></code></div>
+          <div id="send-biometric-note" class="send-auth-note" hidden><span aria-hidden="true">◎</span><div><strong>Device approval required</strong><small>Use your fingerprint, face or screen lock to authorize this transaction.</small></div></div>
+          <label id="send-password-wrap" class="send-password">Confirm wallet password<input id="send-password" type="password" autocomplete="current-password" placeholder="Required to sign"></label>
+          <button id="broadcast-send" class="primary">Sign &amp; Broadcast</button>
+        </div>
+        <button class="back-button" data-home>Back</button>
+      </section>
+      <section id="wallet-receive" data-wallet-panel hidden class="wallet-screen receive-screen">
+        <p class="eyebrow">MAINNET</p><h1>RECEIVE BC2</h1>
+        <div id="receive-qr" class="qr" aria-label="QR code for the receive address"></div>
+        <button id="copy-receive-address" class="address-card"><code id="receive-address"></code><small>Tap to copy</small></button>
+        <p class="hint">This address is for native BitcoinII Mainnet BC2 only. Do not send BTC, xBC2 or tokens from another network.</p>
+        <button class="back-button" data-home>Back</button>
+      </section>
+      <section id="wallet-settings" data-wallet-panel hidden class="wallet-screen">
+        <p class="eyebrow">WALLET 1</p><h1>SETTINGS</h1>
+        <div class="card compact-card"><div class="row"><span>Network</span><strong id="network"></strong></div><div class="row"><span>Chain ID</span><code id="chain-id"></code></div></div>
+        <div class="card compact-card">
+          <div class="card-title"><div><p class="eyebrow">BLOCKCHAIN SYNC</p><h2>Electrum</h2></div><span id="electrum-state" class="pill">DISCONNECTED</span></div>
+          <label id="electrum-transport-wrap" hidden>Connection type<select id="electrum-transport"><option value="wss">WebSocket Secure (WSS)</option><option value="tcp">Native TCP with TLS</option></select></label>
+          <label>Secure Mainnet endpoint<input id="electrum-url" inputmode="url" autocomplete="off" spellcheck="false"></label>
+          <button id="sync-electrum" class="primary">Connect &amp; Synchronize</button>
+          <div class="metrics"><div><span>Block height</span><strong id="block-height">—</strong></div><div><span>Spendable UTXOs</span><strong id="utxo-count">—</strong></div></div>
+        </div>
+        <div class="card compact-card security-card">
+          <div class="card-title"><div><p class="eyebrow">DEVICE SECURITY</p><h2>Biometric approval</h2></div><span id="biometric-state" class="pill">CHECKING</span></div>
+          <p class="hint">Unlock the wallet and approve every outgoing transaction with your phone's secure authentication.</p>
+          <button id="enable-biometric" class="primary">Enable biometric unlock</button>
+          <button id="disable-biometric" class="danger" hidden>Disable biometric unlock</button>
+        </div>
+        <div class="card compact-card recovery-card">
+          <p class="eyebrow">WALLET BACKUP</p><h2>Recovery phrase</h2>
+          <p class="hint">Authentication is required every time. The phrase will hide automatically after 60 seconds.</p>
+          <button id="show-recovery">Authenticate &amp; reveal 12 words</button>
+          <div id="recovery-panel" class="recovery-panel" hidden><code id="recovery-phrase"></code><button id="hide-recovery">Hide recovery phrase</button></div>
+        </div>
+        <div class="card compact-card notification-card">
+          <div class="card-title"><div><p class="eyebrow">ACTIVITY ALERTS</p><h2>Transaction notifications</h2></div><span id="notification-state" class="pill">DISABLED</span></div>
+          <p class="hint">Receive an alert when a new incoming BC2 transaction is detected while the installed wallet is active.</p>
+          <button id="enable-notifications">Enable notifications</button>
+        </div>
+        <button id="settings-remove" class="danger">Remove wallet from device</button>
+        <button id="lock">Lock Wallet</button>
+        <button class="back-button" data-home>Back</button>
+      </section>
+    </section>
+    <dialog id="security-dialog" class="security-dialog">
+      <div class="dialog-mark" aria-hidden="true">◎</div>
+      <p class="eyebrow">SECURITY CHECK</p><h2 id="security-title">Authenticate</h2>
+      <p id="security-description" class="hint"></p>
+      <button id="security-biometric" class="biometric-button"><span aria-hidden="true">◎</span> Use device authentication</button>
+      <div id="security-password-divider" class="divider">or use your wallet password</div>
+      <label id="security-password-wrap">Wallet password<input id="security-password" type="password" autocomplete="current-password"></label>
+      <button id="security-password-submit" class="primary">Authenticate</button>
+      <button id="security-cancel">Cancel</button>
+    </dialog>
+    <p id="status" class="status" aria-live="polite"></p>
+  </main>
+  <footer>BC2 Wallet 0.8.0 · BitcoinII Mainnet · Non-custodial hot wallet</footer>
+  <script src="qrcode.min.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
