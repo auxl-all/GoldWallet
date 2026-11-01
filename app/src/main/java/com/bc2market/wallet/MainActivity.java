@@ -17,11 +17,17 @@ import android.webkit.WebViewClient;
 import android.view.WindowManager;
 import java.io.InputStream;
 import com.google.mlkit.vision.barcode.common.Barcode;
+import com.google.mlkit.vision.barcode.BarcodeScanner;
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
+import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions;
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning;
+import com.google.mlkit.vision.common.InputImage;
+import java.io.IOException;
 
 public final class MainActivity extends Activity {
     static final int NOTIFICATION_REQUEST = 1201;
+    static final int QR_IMAGE_REQUEST = 1203;
     private WebView webView;
     private NativeBridge bridge;
 
@@ -61,10 +67,37 @@ public final class MainActivity extends Activity {
             .addOnFailureListener(error -> bridge.finishQrError("QR scanner unavailable. Update Google Play services and try again."));
     }
 
+    void startQrImageScan(String callbackId) {
+        bridge.setQrCallback(callbackId);
+        Intent picker = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("image/*");
+        try { startActivityForResult(picker, QR_IMAGE_REQUEST); }
+        catch (RuntimeException error) { bridge.finishQrError("Unable to open the image picker."); }
+    }
+
+    private void decodeQrImage(Uri uri) {
+        try {
+            BarcodeScanner scanner = BarcodeScanning.getClient(new BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build());
+            scanner.process(InputImage.fromFilePath(this, uri)).addOnSuccessListener(barcodes -> {
+                String value = barcodes.stream().map(Barcode::getRawValue).filter(item -> item != null && !item.isBlank()).findFirst().orElse(null);
+                scanner.close();
+                if (value == null) bridge.finishQrError("No readable QR code was found in this image."); else bridge.finishQrScan(value);
+            }).addOnFailureListener(error -> { scanner.close(); bridge.finishQrError("Unable to read a QR code from this image."); });
+        } catch (IOException | RuntimeException error) { bridge.finishQrError("Unable to open the selected image."); }
+    }
+
     @Override protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
         bridge.setPendingConnectRequest(connectPayload(intent));
+    }
+
+    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == QR_IMAGE_REQUEST) {
+            if (resultCode == RESULT_OK && data != null && data.getData() != null) decodeQrImage(data.getData());
+            else bridge.finishQrScan(null);
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private String connectPayload(Intent intent) {

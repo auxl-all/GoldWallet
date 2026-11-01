@@ -60,7 +60,7 @@
       <section id="wallet-send" data-wallet-panel hidden class="wallet-screen">
         <p class="eyebrow">MAINNET</p><h1>SEND BC2</h1>
         <label>Recipient address<input id="send-recipient" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="bc1q… or 1…"></label>
-        <div class="recipient-tools"><button id="scan-recipient" hidden>▣ Scan QR</button><button id="open-bookmarks">★ Address book</button><button id="save-bookmark">＋ Save</button></div>
+        <div class="recipient-tools"><button id="scan-recipient" hidden>▣ Scan QR</button><button id="scan-recipient-image" hidden>▧ Scan image</button><button id="open-bookmarks">★ Address book</button><button id="save-bookmark">＋ Save</button></div>
         <label>Amount (BC2)<input id="send-amount" inputmode="decimal" autocomplete="off" placeholder="0.00"></label>
         <div class="fee-line"><span>Network fee</span><strong>Calculated during review</strong></div>
         <button id="review-send" class="primary">Review Transaction</button>
@@ -114,6 +114,7 @@
           <div class="card-title"><div><p class="eyebrow">BC2 CONNECT</p><h2>Connect BC2Market</h2></div><span class="pill ok">MAINNET</span></div>
           <p class="hint">Scan a one-time request from bc2market.com, review it, then approve with password or biometrics.</p>
           <button id="connect-bc2market">Scan connection QR</button>
+          <button id="connect-bc2market-image">Scan QR from image</button>
         </div>
         <button id="settings-remove" class="danger">Remove wallet from device</button>
         <button id="lock">Lock Wallet</button>
