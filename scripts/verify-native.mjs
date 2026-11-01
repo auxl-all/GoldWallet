@@ -13,7 +13,7 @@ assert.match(manifest,/usesCleartextTraffic="false"/);
 assert.match(manifest,/USE_BIOMETRIC/);
 assert.match(manifest,/hardwareAccelerated="true"/);
 assert.match(manifest,/com\.google\.mlkit\.vision\.DEPENDENCIES/);
-assert.match(manifest,/android:value="barcode_ui"/);
+assert.match(manifest,/android:value="barcode_ui,barcode"/);
 assert.match(manifest,/android:scheme="bc2connect"/);
 assert.match(activity,/FLAG_SECURE/);
 assert.match(activity,/appassets\.androidplatform\.net/);
