@@ -582,6 +582,6 @@ footer {
 .bookmark-list > div { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 .bookmark-pick { white-space: pre-line; text-align: left; overflow-wrap: anywhere; }
 .bookmark-delete { width: auto; color: #ff7b86; }
-.connect-qr { margin-top: 16px; }
+.connect-qr { display:grid;place-items:center;margin-top:16px;color:#20c997;font-size:5rem;font-weight:900; }
 #connect-result { width: 100%; margin: 12px 0; padding: 12px; border: 1px solid #44331f; border-radius: 12px; background: #08080b; color: #d9c49d; font: .72rem/1.5 ui-monospace,monospace; resize: none; }
 @media(max-width:420px){.recipient-tools{grid-template-columns:1fr 1fr}.recipient-tools button:last-child{grid-column:1/-1}}

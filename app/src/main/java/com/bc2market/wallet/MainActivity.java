@@ -31,6 +31,7 @@ public final class MainActivity extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
         webView = new WebView(this);
         bridge = new NativeBridge(this, webView);
+        bridge.setPendingConnectRequest(connectPayload(getIntent()));
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true); // Wallet code is bundled locally; external navigation is blocked below.
         settings.setDomStorageEnabled(true);
@@ -65,8 +66,19 @@ public final class MainActivity extends Activity {
     }
 
     private void launchQrScanner() {
-        new IntentIntegrator(this).setDesiredBarcodeFormats(IntentIntegrator.QR_CODE).setPrompt("Scan a BitcoinII address")
+        new IntentIntegrator(this).setDesiredBarcodeFormats(IntentIntegrator.QR_CODE).setPrompt("Scan a BC2 address or connection request")
             .setBeepEnabled(false).setOrientationLocked(false).initiateScan();
+    }
+
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        bridge.setPendingConnectRequest(connectPayload(intent));
+    }
+
+    private String connectPayload(Intent intent) {
+        Uri uri = intent == null ? null : intent.getData();
+        return uri != null && "bc2connect".equals(uri.getScheme()) && "connect".equals(uri.getHost()) ? uri.getQueryParameter("payload") : null;
     }
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {

@@ -50,6 +50,7 @@ public final class NativeBridge {
     private final ExecutorService network = Executors.newCachedThreadPool();
     private String notificationCallback;
     private String qrCallback;
+    private String pendingConnectRequest;
 
     NativeBridge(MainActivity activity, WebView webView) {
         this.activity = activity;
@@ -158,6 +159,16 @@ public final class NativeBridge {
     void setQrCallback(String callbackId) { qrCallback = callbackId; }
     void finishQrScan(String contents) { String id = qrCallback; qrCallback = null; if (id != null) callback(id, contents != null, contents == null ? "QR scan cancelled." : contents); }
     void finishQrError(String message) { String id = qrCallback; qrCallback = null; if (id != null) callback(id, false, message); }
+
+    @JavascriptInterface public void consumeConnectRequest(String callbackId) {
+        String value = pendingConnectRequest; pendingConnectRequest = null; callback(callbackId, true, value == null ? "" : value);
+    }
+    void setPendingConnectRequest(String value) {
+        if (value == null || value.length() > 5000) return;
+        pendingConnectRequest = value;
+        String script = "globalThis.__bc2ConnectRequest?.(" + JSONObject.quote(value) + ")";
+        activity.runOnUiThread(() -> webView.evaluateJavascript(script, null));
+    }
 
     @JavascriptInterface public void electrumRequest(String host, int port, boolean tls, String request, String callbackId) {
         if (!tls) { callback(callbackId, false, "Mainnet Electrum TCP requires TLS."); return; }

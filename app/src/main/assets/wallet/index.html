@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07070d">
   <meta name="robots" content="noindex,nofollow">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src wss://electrum.bc2market.com; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src wss://electrum.bc2market.com https://bc2market.com; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
   <title>BC2 Wallet · Mainnet</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
@@ -111,9 +111,9 @@
           <button id="enable-notifications">Enable notifications</button>
         </div>
         <div class="card compact-card connect-card">
-          <div class="card-title"><div><p class="eyebrow">BC2 CONNECT</p><h2>Connect BC2Market</h2></div><span class="pill pending">PREVIEW</span></div>
-          <p class="hint">Create a signed Mainnet connection proof. No transaction or private key leaves this wallet.</p>
-          <button id="connect-bc2market">Create connection proof</button>
+          <div class="card-title"><div><p class="eyebrow">BC2 CONNECT</p><h2>Connect BC2Market</h2></div><span class="pill ok">MAINNET</span></div>
+          <p class="hint">Scan a one-time request from bc2market.com, review it, then approve with password or biometrics.</p>
+          <button id="connect-bc2market">Scan connection QR</button>
         </div>
         <button id="settings-remove" class="danger">Remove wallet from device</button>
         <button id="lock">Lock Wallet</button>
@@ -138,8 +138,8 @@
       <button id="bookmark-save" class="primary">Save address</button><button id="bookmark-close">Close</button>
     </dialog>
     <dialog id="connect-dialog" class="security-dialog">
-      <p class="eyebrow">BC2 CONNECT · MAINNET</p><h2>Connection proof</h2>
-      <p class="hint">This proof shares only your address and signed message. It cannot move BC2.</p>
+      <p class="eyebrow">BC2 CONNECT · MAINNET</p><h2>Wallet connected</h2>
+      <p class="hint">bc2market.com verified this address. No transaction or private key left the wallet.</p>
       <div id="connect-qr" class="qr connect-qr"></div>
       <textarea id="connect-result" rows="7" readonly></textarea>
       <button id="copy-connect-proof" class="primary">Copy proof</button><button id="connect-close">Close</button>
