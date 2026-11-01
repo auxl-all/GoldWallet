@@ -49,6 +49,7 @@ public final class NativeBridge {
     private final SharedPreferences prefs;
     private final ExecutorService network = Executors.newCachedThreadPool();
     private String notificationCallback;
+    private String qrCallback;
 
     NativeBridge(MainActivity activity, WebView webView) {
         this.activity = activity;
@@ -152,6 +153,10 @@ public final class NativeBridge {
             .setContentIntent(pending).setAutoCancel(true).build();
         activity.getSystemService(NotificationManager.class).notify((int) System.currentTimeMillis(), notification);
     }
+
+    @JavascriptInterface public void scanQr(String callbackId) { activity.runOnUiThread(() -> activity.startQrScan(callbackId)); }
+    void setQrCallback(String callbackId) { qrCallback = callbackId; }
+    void finishQrScan(String contents) { String id = qrCallback; qrCallback = null; if (id != null) callback(id, contents != null, contents == null ? "QR scan cancelled." : contents); }
 
     @JavascriptInterface public void electrumRequest(String host, int port, boolean tls, String request, String callbackId) {
         if (!tls) { callback(callbackId, false, "Mainnet Electrum TCP requires TLS."); return; }

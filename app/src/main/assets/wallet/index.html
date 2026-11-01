@@ -23,14 +23,17 @@
   <main>
     <section class="warning"><strong>BitcoinII Mainnet hot wallet.</strong> Start with a small amount. Keep the recovery phrase offline. Never import a phrase that also controls BTC or another wallet.</section>
     <section id="setup" data-view hidden class="card auth-card">
-      <p class="eyebrow">NEW WALLET</p><h1>Your keys. Your BC2.</h1>
-      <p>Create a separate 12-word BitcoinII Mainnet wallet or restore a compatible BIP84 phrase.</p>
-      <label>Password <small>12 characters minimum</small><input id="setup-password" type="password" autocomplete="new-password" minlength="12"></label>
-      <label>Confirm password<input id="setup-confirm" type="password" autocomplete="new-password" minlength="12"></label>
-      <button id="create" class="primary">Create Mainnet wallet</button>
-      <div class="divider">or restore</div>
-      <label>12-word recovery phrase<textarea id="restore-phrase" rows="4" autocomplete="off" spellcheck="false"></textarea></label>
-      <button id="restore">Restore Mainnet wallet</button>
+      <div class="setup-mark"><img src="icon.svg" alt=""></div>
+      <p class="eyebrow">SECURE MAINNET WALLET</p><h1>Start with BC2</h1>
+      <p class="auth-copy">Create a new self-custody wallet or recover one you already control.</p>
+      <div class="setup-tabs" role="tablist"><button id="setup-create-tab" class="active" role="tab" aria-selected="true">Create new</button><button id="setup-restore-tab" role="tab" aria-selected="false">Restore wallet</button></div>
+      <div class="setup-points"><span>✓ Keys stay on device</span><span>✓ 12-word backup</span><span>✓ Mainnet verified</span></div>
+      <div id="setup-create-pane"><h2>Create a fresh wallet</h2><p class="hint">A new recovery phrase will be generated after your password is confirmed.</p></div>
+      <div id="setup-restore-pane" hidden><h2>Restore with 12 words</h2><label>Recovery phrase <small id="restore-count">0 / 12 words</small><textarea id="restore-phrase" rows="4" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Enter the words in the correct order"></textarea></label></div>
+      <div class="setup-passwords"><label>Password <small>12 characters minimum</small><input id="setup-password" type="password" autocomplete="new-password" minlength="12" placeholder="Create a strong password"></label><label>Confirm password<input id="setup-confirm" type="password" autocomplete="new-password" minlength="12" placeholder="Enter it again"></label></div>
+      <button id="create" class="primary setup-submit">Create Mainnet wallet</button>
+      <button id="restore" class="primary setup-submit" hidden>Restore Mainnet wallet</button>
+      <p class="auth-footnote">BC2 Market cannot recover your password or recovery phrase.</p>
     </section>
     <section id="unlock" data-view hidden class="card auth-card">
       <div class="auth-mark" aria-hidden="true"><span>⌾</span></div>
@@ -57,6 +60,7 @@
       <section id="wallet-send" data-wallet-panel hidden class="wallet-screen">
         <p class="eyebrow">MAINNET</p><h1>SEND BC2</h1>
         <label>Recipient address<input id="send-recipient" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="bc1q… or 1…"></label>
+        <div class="recipient-tools"><button id="scan-recipient" hidden>▣ Scan QR</button><button id="open-bookmarks">★ Address book</button><button id="save-bookmark">＋ Save</button></div>
         <label>Amount (BC2)<input id="send-amount" inputmode="decimal" autocomplete="off" placeholder="0.00"></label>
         <div class="fee-line"><span>Network fee</span><strong>Calculated during review</strong></div>
         <button id="review-send" class="primary">Review Transaction</button>
@@ -106,6 +110,11 @@
           <p class="hint">Receive an alert when a new incoming BC2 transaction is detected while the installed wallet is active.</p>
           <button id="enable-notifications">Enable notifications</button>
         </div>
+        <div class="card compact-card connect-card">
+          <div class="card-title"><div><p class="eyebrow">BC2 CONNECT</p><h2>Connect BC2Market</h2></div><span class="pill pending">PREVIEW</span></div>
+          <p class="hint">Create a signed Mainnet connection proof. No transaction or private key leaves this wallet.</p>
+          <button id="connect-bc2market">Create connection proof</button>
+        </div>
         <button id="settings-remove" class="danger">Remove wallet from device</button>
         <button id="lock">Lock Wallet</button>
         <button class="back-button" data-home>Back</button>
@@ -120,6 +129,20 @@
       <label id="security-password-wrap">Wallet password<input id="security-password" type="password" autocomplete="current-password"></label>
       <button id="security-password-submit" class="primary">Authenticate</button>
       <button id="security-cancel">Cancel</button>
+    </dialog>
+    <dialog id="bookmarks-dialog" class="security-dialog">
+      <p class="eyebrow">ADDRESS BOOK</p><h2>Saved recipients</h2>
+      <div id="bookmark-list" class="bookmark-list"></div>
+      <label>Label<input id="bookmark-label" maxlength="40" placeholder="e.g. Mining wallet"></label>
+      <label>BC2 address<input id="bookmark-address" autocapitalize="none" spellcheck="false" placeholder="bc1q… or 1…"></label>
+      <button id="bookmark-save" class="primary">Save address</button><button id="bookmark-close">Close</button>
+    </dialog>
+    <dialog id="connect-dialog" class="security-dialog">
+      <p class="eyebrow">BC2 CONNECT · MAINNET</p><h2>Connection proof</h2>
+      <p class="hint">This proof shares only your address and signed message. It cannot move BC2.</p>
+      <div id="connect-qr" class="qr connect-qr"></div>
+      <textarea id="connect-result" rows="7" readonly></textarea>
+      <button id="copy-connect-proof" class="primary">Copy proof</button><button id="connect-close">Close</button>
     </dialog>
     <p id="status" class="status" aria-live="polite"></p>
   </main>

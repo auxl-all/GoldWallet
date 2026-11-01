@@ -3,6 +3,7 @@ package com.bc2market.wallet;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,6 +16,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.view.WindowManager;
 import java.io.InputStream;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 public final class MainActivity extends Activity {
     static final int NOTIFICATION_REQUEST = 1201;
@@ -45,6 +48,18 @@ public final class MainActivity extends Activity {
         bridge.setNotificationCallback(callbackId);
         if (android.os.Build.VERSION.SDK_INT >= 33) requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_REQUEST);
         else bridge.finishNotificationPermission(true);
+    }
+
+    void startQrScan(String callbackId) {
+        bridge.setQrCallback(callbackId);
+        new IntentIntegrator(this).setDesiredBarcodeFormats(IntentIntegrator.QR_CODE).setPrompt("Scan a BitcoinII address")
+            .setBeepEnabled(false).setOrientationLocked(false).initiateScan();
+    }
+
+    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) { bridge.finishQrScan(result.getContents()); return; }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {

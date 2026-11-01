@@ -566,3 +566,22 @@ footer {
 .security-dialog > button { margin-top: 10px; }
 .dialog-mark { display: grid; place-items: center; width: 50px; height: 50px; margin-bottom: 18px; border-radius: 16px; background: #ff961b; color: #120b04; font-size: 1.7rem; font-weight: 900; }
 .wallet-screen select { width: 100%; border: 1px solid var(--line); border-radius: 4px; background: #0a0a10; color: #fff; padding: 16px; font: inherit; }
+.setup-mark { display: grid; place-items: center; width: 72px; height: 72px; margin-bottom: 22px; border: 1px solid #8b5a25; border-radius: 22px; background: linear-gradient(145deg,#2a1b0d,#0e0d0c); box-shadow: 0 15px 40px #ff961826; }
+.setup-mark img { width: 50px; height: 50px; }
+.setup-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 22px 0; padding: 5px; border: 1px solid #3c3025; border-radius: 16px; background: #09090c; }
+.setup-tabs button { border: 0; background: transparent; color: #8f8981; }
+.setup-tabs button.active { background: linear-gradient(145deg,#38230e,#21170e); color: #ffb14a; box-shadow: inset 0 0 0 1px #825522; }
+.setup-points { display: grid; gap: 7px; margin-bottom: 25px; color: #7fc99f; font-size: .78rem; }
+.setup-passwords label, #setup-restore-pane label { display: grid; gap: 8px; margin: 16px 0; color: #c8beb2; font-weight: 700; }
+.setup-passwords input, #setup-restore-pane textarea { width: 100%; padding: 15px; border: 1px solid #57432f; border-radius: 13px; background: #08080c; color: #fff; font: inherit; }
+.setup-passwords small, #setup-restore-pane small { color: #8c837a; font-weight: 500; }
+.setup-submit { margin-top: 12px; min-height: 56px; }
+.recipient-tools { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: -13px; }
+.recipient-tools button { padding: 11px 7px; border-radius: 11px; color: #ffc16d; font-size: .72rem; }
+.bookmark-list { display: grid; gap: 8px; max-height: 270px; overflow-y: auto; }
+.bookmark-list > div { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.bookmark-pick { white-space: pre-line; text-align: left; overflow-wrap: anywhere; }
+.bookmark-delete { width: auto; color: #ff7b86; }
+.connect-qr { margin-top: 16px; }
+#connect-result { width: 100%; margin: 12px 0; padding: 12px; border: 1px solid #44331f; border-radius: 12px; background: #08080b; color: #d9c49d; font: .72rem/1.5 ui-monospace,monospace; resize: none; }
+@media(max-width:420px){.recipient-tools{grid-template-columns:1fr 1fr}.recipient-tools button:last-child{grid-column:1/-1}}
