@@ -21,6 +21,7 @@ import com.google.zxing.integration.android.IntentResult;
 
 public final class MainActivity extends Activity {
     static final int NOTIFICATION_REQUEST = 1201;
+    static final int CAMERA_REQUEST = 1202;
     private WebView webView;
     private NativeBridge bridge;
 
@@ -52,6 +53,18 @@ public final class MainActivity extends Activity {
 
     void startQrScan(String callbackId) {
         bridge.setQrCallback(callbackId);
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
+            bridge.finishQrError("This device does not have a camera.");
+            return;
+        }
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_REQUEST);
+            return;
+        }
+        launchQrScanner();
+    }
+
+    private void launchQrScanner() {
         new IntentIntegrator(this).setDesiredBarcodeFormats(IntentIntegrator.QR_CODE).setPrompt("Scan a BitcoinII address")
             .setBeepEnabled(false).setOrientationLocked(false).initiateScan();
     }
@@ -65,6 +78,10 @@ public final class MainActivity extends Activity {
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
         if (requestCode == NOTIFICATION_REQUEST) bridge.finishNotificationPermission(results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED);
+        if (requestCode == CAMERA_REQUEST) {
+            if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) launchQrScanner();
+            else bridge.finishQrError("Camera permission was not granted. Enable it in Android Settings to scan QR codes.");
+        }
     }
 
     @Override public void onBackPressed() {

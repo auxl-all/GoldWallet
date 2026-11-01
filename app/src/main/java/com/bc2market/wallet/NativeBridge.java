@@ -157,6 +157,7 @@ public final class NativeBridge {
     @JavascriptInterface public void scanQr(String callbackId) { activity.runOnUiThread(() -> activity.startQrScan(callbackId)); }
     void setQrCallback(String callbackId) { qrCallback = callbackId; }
     void finishQrScan(String contents) { String id = qrCallback; qrCallback = null; if (id != null) callback(id, contents != null, contents == null ? "QR scan cancelled." : contents); }
+    void finishQrError(String message) { String id = qrCallback; qrCallback = null; if (id != null) callback(id, false, message); }
 
     @JavascriptInterface public void electrumRequest(String host, int port, boolean tls, String request, String callbackId) {
         if (!tls) { callback(callbackId, false, "Mainnet Electrum TCP requires TLS."); return; }
