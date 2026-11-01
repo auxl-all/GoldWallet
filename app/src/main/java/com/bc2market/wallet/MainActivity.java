@@ -16,12 +16,12 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.view.WindowManager;
 import java.io.InputStream;
-import com.google.zxing.integration.android.IntentIntegrator;
-import com.google.zxing.integration.android.IntentResult;
+import com.google.mlkit.vision.barcode.common.Barcode;
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions;
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning;
 
 public final class MainActivity extends Activity {
     static final int NOTIFICATION_REQUEST = 1201;
-    static final int CAMERA_REQUEST = 1202;
     private WebView webView;
     private NativeBridge bridge;
 
@@ -54,24 +54,11 @@ public final class MainActivity extends Activity {
 
     void startQrScan(String callbackId) {
         bridge.setQrCallback(callbackId);
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
-            bridge.finishQrError("This device does not have a camera.");
-            return;
-        }
-        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_REQUEST);
-            return;
-        }
-        launchQrScanner();
-    }
-
-    private void launchQrScanner() {
-        try {
-            new IntentIntegrator(this).setCaptureActivity(QrCaptureActivity.class).setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
-                .setPrompt("Scan a BC2 address or connection request").setBeepEnabled(false).setOrientationLocked(false).initiateScan();
-        } catch (RuntimeException error) {
-            bridge.finishQrError("Unable to open the QR scanner. Check the camera permission and try again.");
-        }
+        GmsBarcodeScannerOptions options = new GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).enableAutoZoom().build();
+        GmsBarcodeScanning.getClient(this, options).startScan()
+            .addOnSuccessListener(barcode -> bridge.finishQrScan(barcode.getRawValue()))
+            .addOnCanceledListener(() -> bridge.finishQrScan(null))
+            .addOnFailureListener(error -> bridge.finishQrError("QR scanner unavailable. Update Google Play services and try again."));
     }
 
     @Override protected void onNewIntent(Intent intent) {
@@ -85,19 +72,9 @@ public final class MainActivity extends Activity {
         return uri != null && "bc2connect".equals(uri.getScheme()) && "connect".equals(uri.getHost()) ? uri.getQueryParameter("payload") : null;
     }
 
-    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-        if (result != null) { bridge.finishQrScan(result.getContents()); return; }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
         if (requestCode == NOTIFICATION_REQUEST) bridge.finishNotificationPermission(results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED);
-        if (requestCode == CAMERA_REQUEST) {
-            if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) launchQrScanner();
-            else bridge.finishQrError("Camera permission was not granted. Enable it in Android Settings to scan QR codes.");
-        }
     }
 
     @Override public void onBackPressed() {

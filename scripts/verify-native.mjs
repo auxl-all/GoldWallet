@@ -1,10 +1,9 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 
-const [manifest,activity,capture,bridge,wallet,html]=await Promise.all([
+const [manifest,activity,bridge,wallet,html]=await Promise.all([
   readFile('app/src/main/AndroidManifest.xml','utf8'),
   readFile('app/src/main/java/com/bc2market/wallet/MainActivity.java','utf8'),
-  readFile('app/src/main/java/com/bc2market/wallet/QrCaptureActivity.java','utf8'),
   readFile('app/src/main/java/com/bc2market/wallet/NativeBridge.java','utf8'),
   readFile('app/src/main/assets/wallet/app.js','utf8'),
   readFile('app/src/main/assets/wallet/index.html','utf8')
@@ -12,17 +11,16 @@ const [manifest,activity,capture,bridge,wallet,html]=await Promise.all([
 assert.match(manifest,/allowBackup="false"/);
 assert.match(manifest,/usesCleartextTraffic="false"/);
 assert.match(manifest,/USE_BIOMETRIC/);
-assert.match(manifest,/android.permission.CAMERA/);
 assert.match(manifest,/hardwareAccelerated="true"/);
-assert.match(manifest,/android:name="\.QrCaptureActivity"/);
-assert.match(manifest,/screenOrientation="unspecified"/);
+assert.match(manifest,/com\.google\.mlkit\.vision\.DEPENDENCIES/);
+assert.match(manifest,/android:value="barcode_ui"/);
 assert.match(manifest,/android:scheme="bc2connect"/);
 assert.match(activity,/FLAG_SECURE/);
 assert.match(activity,/appassets\.androidplatform\.net/);
 assert.match(activity,/shouldOverrideUrlLoading/);
-assert.match(activity,/IntentIntegrator/);
-assert.match(activity,/setCaptureActivity\(QrCaptureActivity\.class\)/);
-assert.match(capture,/extends CaptureActivity/);
+assert.match(activity,/GmsBarcodeScanning\.getClient/);
+assert.match(activity,/Barcode\.FORMAT_QR_CODE/);
+assert.match(activity,/enableAutoZoom/);
 assert.match(bridge,/AndroidKeyStore/);
 assert.match(bridge,/setUserAuthenticationRequired\(true\)/);
 assert.match(bridge,/setEndpointIdentificationAlgorithm\("HTTPS"\)/);
