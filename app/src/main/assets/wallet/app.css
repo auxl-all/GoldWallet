@@ -304,6 +304,10 @@ h2 {
   color: #6f6963;
   overflow-wrap: anywhere;
 }
+.history .explorer-txid{grid-area:txid;margin-top:4px;overflow:hidden;color:#b98a49;font:inherit;text-decoration:none;text-overflow:ellipsis;white-space:nowrap}
+.history .explorer-txid:focus-visible,.explorer-shortcut:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.explorer-shortcut{display:flex;align-items:center;justify-content:space-between;margin:-9px 0 24px;padding:10px 14px;border-color:#4f3a20;border-radius:11px;background:#100d09;color:#dca653;font-size:.76rem}
+.explorer-shortcut b{color:var(--gold);font-size:1rem}
 .wallet-screen {
   padding-top: 18px;
   min-height: 70vh;

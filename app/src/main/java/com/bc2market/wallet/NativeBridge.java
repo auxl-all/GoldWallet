@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.CancellationSignal;
 import android.security.keystore.KeyGenParameterSpec;
@@ -172,6 +173,12 @@ public final class NativeBridge {
 
     @JavascriptInterface public void scanQr(String callbackId) { activity.runOnUiThread(() -> activity.startQrScan(callbackId)); }
     @JavascriptInterface public void scanQrImage(String callbackId) { activity.runOnUiThread(() -> activity.startQrImageScan(callbackId)); }
+    @JavascriptInterface public void openExternal(String value) {
+        if (value == null) return;
+        Uri uri = Uri.parse(value);
+        if (!"https".equals(uri.getScheme()) || !"bc2market.com".equals(uri.getHost()) || !"/explorer".equals(uri.getPath())) return;
+        activity.runOnUiThread(() -> activity.startActivity(new Intent(Intent.ACTION_VIEW, uri)));
+    }
     void setQrCallback(String callbackId) { qrCallback = callbackId; }
     void finishQrScan(String contents) { String id = qrCallback; qrCallback = null; if (id != null) callback(id, contents != null, contents == null ? "QR scan cancelled." : contents); }
     void finishQrError(String message) { String id = qrCallback; qrCallback = null; if (id != null) callback(id, false, message); }
