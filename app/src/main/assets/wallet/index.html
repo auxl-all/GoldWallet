@@ -6,14 +6,14 @@
   <meta name="theme-color" content="#07070d">
   <meta name="robots" content="noindex,nofollow">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src wss://electrum.bc2market.com https://bc2market.com; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
-  <title>BC2 Wallet · Mainnet</title>
+  <title>GoldWallet · BitcoinII Mainnet</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icon.svg">
+  <link rel="icon" href="goldwallet-icon.png">
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
   <header class="app-header">
-    <button id="home-wallet" class="brand" aria-label="Wallet home"><img src="icon.svg" alt=""><strong>BC2</strong></button>
+    <button id="home-wallet" class="brand" aria-label="GoldWallet home"><img src="goldwallet-icon.png" alt=""><strong>GoldWallet</strong></button>
     <nav aria-label="Wallet controls">
       <button id="history-shortcut" class="icon-button" aria-label="Recent transactions">☷</button>
       <button id="quick-sync" class="icon-button" aria-label="Synchronize wallet">↻</button>
@@ -23,7 +23,7 @@
   <main>
     <section class="warning"><strong>BitcoinII Mainnet hot wallet.</strong> Start with a small amount. Keep the recovery phrase offline. Never import a phrase that also controls BTC or another wallet.</section>
     <section id="setup" data-view hidden class="card auth-card">
-      <div class="setup-mark"><img src="icon.svg" alt=""></div>
+      <div class="setup-mark"><img src="goldwallet-icon.png" alt=""></div>
       <p class="eyebrow">SECURE MAINNET WALLET</p><h1>Start with BC2</h1>
       <p class="auth-copy">Create a new self-custody wallet or recover one you already control.</p>
       <div class="setup-tabs" role="tablist"><button id="setup-create-tab" class="active" role="tab" aria-selected="true">Create new</button><button id="setup-restore-tab" role="tab" aria-selected="false">Restore wallet</button></div>
@@ -147,7 +147,7 @@
     </dialog>
     <p id="status" class="status" aria-live="polite"></p>
   </main>
-  <footer>BC2 Wallet 0.8.0 · BitcoinII Mainnet · Non-custodial hot wallet</footer>
+  <footer>GoldWallet 0.4.0 · BitcoinII Mainnet · Non-custodial hot wallet</footer>
   <script src="qrcode.min.js" defer></script>
   <script src="app.js" defer></script>
 </body>

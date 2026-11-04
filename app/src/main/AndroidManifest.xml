@@ -9,8 +9,8 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
         android:hardwareAccelerated="true"
-        android:icon="@drawable/bc2_wallet_icon"
-        android:label="BC2 Wallet"
+        android:icon="@drawable/goldwallet_icon"
+        android:label="GoldWallet"
         android:supportsRtl="true"
         android:theme="@style/Theme.BC2Wallet"
         android:usesCleartextTraffic="false">

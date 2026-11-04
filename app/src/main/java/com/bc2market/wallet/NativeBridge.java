@@ -57,7 +57,8 @@ public final class NativeBridge {
         this.webView = webView;
         this.prefs = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         NotificationManager manager = activity.getSystemService(NotificationManager.class);
-        manager.createNotificationChannel(new NotificationChannel(CHANNEL, "BC2 transactions", NotificationManager.IMPORTANCE_DEFAULT));
+        manager.createNotificationChannel(new NotificationChannel(CHANNEL, "GoldWallet transactions", NotificationManager.IMPORTANCE_DEFAULT));
+        BackgroundMonitorWorker.schedule(activity);
     }
 
     @JavascriptInterface public boolean biometricAvailable() {
@@ -134,13 +135,13 @@ public final class NativeBridge {
     @JavascriptInterface public void requestNotifications(String callbackId) {
         activity.runOnUiThread(() -> {
             if (Build.VERSION.SDK_INT >= 33 && activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) activity.requestNotificationPermission(callbackId);
-            else { prefs.edit().putBoolean(NOTIFICATIONS, true).apply(); callback(callbackId, true, "enabled"); }
+            else { prefs.edit().putBoolean(NOTIFICATIONS, true).apply(); BackgroundMonitorWorker.schedule(activity); callback(callbackId, true, "enabled"); }
         });
     }
 
     void setNotificationCallback(String callbackId) { notificationCallback = callbackId; }
     void finishNotificationPermission(boolean granted) {
-        if (granted) prefs.edit().putBoolean(NOTIFICATIONS, true).apply();
+        if (granted) { prefs.edit().putBoolean(NOTIFICATIONS, true).apply(); BackgroundMonitorWorker.schedule(activity); }
         String id = notificationCallback; notificationCallback = null;
         if (id != null) callback(id, granted, granted ? "enabled" : "Notification permission was not granted.");
     }
@@ -154,6 +155,20 @@ public final class NativeBridge {
             .setContentIntent(pending).setAutoCancel(true).build();
         activity.getSystemService(NotificationManager.class).notify((int) System.currentTimeMillis(), notification);
     }
+
+    @JavascriptInterface public void configureBackgroundMonitor(String scriptHash, String balance, String txid) {
+        if (scriptHash == null || !scriptHash.matches("[0-9a-fA-F]{64}")) return;
+        if (txid == null || (!txid.isEmpty() && !txid.matches("[0-9a-fA-F]{64}"))) return;
+        try {
+            long sats = Long.parseLong(balance);
+            prefs.edit().putString(BackgroundMonitorWorker.KEY_SCRIPT_HASH, scriptHash.toLowerCase())
+                .putLong(BackgroundMonitorWorker.KEY_BALANCE, sats)
+                .putString(BackgroundMonitorWorker.KEY_TXID, txid.toLowerCase()).apply();
+            BackgroundMonitorWorker.schedule(activity);
+        } catch (NumberFormatException ignored) {}
+    }
+
+    @JavascriptInterface public void disableBackgroundMonitor() { BackgroundMonitorWorker.disable(activity); }
 
     @JavascriptInterface public void scanQr(String callbackId) { activity.runOnUiThread(() -> activity.startQrScan(callbackId)); }
     @JavascriptInterface public void scanQrImage(String callbackId) { activity.runOnUiThread(() -> activity.startQrImageScan(callbackId)); }
@@ -199,7 +214,7 @@ public final class NativeBridge {
     private interface AuthSuccess { void run(BiometricPrompt.AuthenticationResult result); }
     private void authenticate(Cipher cipher, String callbackId, AuthSuccess success) {
         CancellationSignal cancel = new CancellationSignal();
-        BiometricPrompt prompt = new BiometricPrompt.Builder(activity).setTitle("BC2 Wallet security").setSubtitle("Confirm your fingerprint")
+        BiometricPrompt prompt = new BiometricPrompt.Builder(activity).setTitle("GoldWallet security").setSubtitle("Confirm your fingerprint")
             .setNegativeButton("Cancel", activity.getMainExecutor(), (dialog, which) -> callback(callbackId, false, "Authentication cancelled."))
             .build();
         prompt.authenticate(new BiometricPrompt.CryptoObject(cipher), cancel, activity.getMainExecutor(), new BiometricPrompt.AuthenticationCallback() {
