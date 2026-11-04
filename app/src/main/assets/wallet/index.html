@@ -61,8 +61,11 @@
       </section>
       <section id="wallet-send" data-wallet-panel hidden class="wallet-screen">
         <p class="eyebrow">MAINNET</p><h1>SEND BC2</h1>
-        <label>Recipient address<input id="send-recipient" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="bc1q… or 1…"></label>
-        <div class="recipient-tools"><button id="scan-recipient" hidden>▣ Scan QR</button><button id="scan-recipient-image" hidden>▧ Scan image</button><button id="open-bookmarks">★ Address book</button><button id="save-bookmark">＋ Save</button></div>
+        <label class="recipient-label">Recipient address
+          <span class="recipient-input"><input id="send-recipient" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="bc1q… or 1…" aria-describedby="recipient-validity"><span class="recipient-inline-actions"><button id="open-bookmarks" type="button" aria-label="Open address book"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 6.5c4.8-1.8 8.7-.8 12 2.2 3.3-3 7.2-4 12-2.2v20c-4.8-1.8-8.7-.8-12 2.2-3.3-3-7.2-4-12-2.2zM16 8.7v20M20 11h5M20 15h5M20 19h5"/></svg></button><button id="scan-recipient" type="button" aria-label="Scan recipient QR" hidden><svg viewBox="0 0 32 32" aria-hidden="true"><path class="qr-corners" d="M12 4H7a3 3 0 0 0-3 3v5M20 4h5a3 3 0 0 1 3 3v5M28 20v5a3 3 0 0 1-3 3h-5M12 28H7a3 3 0 0 1-3-3v-5"/><path class="qr-modules" d="M8 8h7v7H8zm2.25 2.25v2.5h2.5v-2.5zM17 8h7v7h-7zm2.25 2.25v2.5h2.5v-2.5zM8 17h7v7H8zm2.25 2.25v2.5h2.5v-2.5zM17 17h3v3h-3zm4 0h3v3h-3zm-4 4h3v3h-3zm4 0h3v3h-3z"/></svg></button></span></span>
+          <small id="recipient-validity" class="address-validity">Enter a BitcoinII Mainnet address.</small>
+        </label>
+        <div class="recipient-tools"><button id="scan-recipient-image" hidden>Scan QR from image</button></div>
         <label>Amount (BC2)<input id="send-amount" inputmode="decimal" autocomplete="off" placeholder="0.00"></label>
         <div class="fee-line"><span>Network fee</span><strong>Calculated during review</strong></div>
         <button id="review-send" class="primary">Review Transaction</button>
@@ -142,7 +145,7 @@
       <button id="copy-connect-proof" class="primary">Copy proof</button><button id="connect-close">Close</button>
     </dialog>
   </main>
-  <footer>GoldWallet 0.4.3 · BitcoinII Mainnet · Non-custodial hot wallet</footer>
+  <footer>GoldWallet 0.4.4 · BitcoinII Mainnet · Non-custodial hot wallet</footer>
   <script src="qrcode.min.js" defer></script>
   <script src="app.js" defer></script>
 </body>
