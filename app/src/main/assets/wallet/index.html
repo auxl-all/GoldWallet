@@ -18,6 +18,7 @@
       <button id="history-shortcut" class="icon-button" aria-label="Recent transactions">☷</button>
       <button id="quick-sync" class="icon-button" aria-label="Synchronize wallet">↻</button>
       <button id="open-settings" class="icon-button" aria-label="Wallet settings">⚙</button>
+      <button id="scan-wallet-qr" class="icon-button" aria-label="Scan wallet or BC2Market QR">▦</button>
     </nav>
   </header>
   <main>
@@ -110,12 +111,6 @@
           <p class="hint">Receive an alert when a new incoming BC2 transaction is detected while the installed wallet is active.</p>
           <button id="enable-notifications">Enable notifications</button>
         </div>
-        <div class="card compact-card connect-card">
-          <div class="card-title"><div><p class="eyebrow">BC2 CONNECT</p><h2>Connect BC2Market</h2></div><span class="pill ok">MAINNET</span></div>
-          <p class="hint">Scan a one-time request from bc2market.com, review it, then approve with password or biometrics.</p>
-          <button id="connect-bc2market">Scan connection QR</button>
-          <button id="connect-bc2market-image">Scan QR from image</button>
-        </div>
         <button id="settings-remove" class="danger">Remove wallet from device</button>
         <button id="lock">Lock Wallet</button>
         <button class="back-button" data-home>Back</button>
@@ -147,7 +142,7 @@
     </dialog>
     <p id="status" class="status" aria-live="polite"></p>
   </main>
-  <footer>GoldWallet 0.4.0 · BitcoinII Mainnet · Non-custodial hot wallet</footer>
+  <footer>GoldWallet 0.4.1 · BitcoinII Mainnet · Non-custodial hot wallet</footer>
   <script src="qrcode.min.js" defer></script>
   <script src="app.js" defer></script>
 </body>

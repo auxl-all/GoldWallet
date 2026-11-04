@@ -51,6 +51,6 @@ assert.match(wallet,/api\/wallet-connect\/verify/);
 assert.match(html,/id="scan-recipient"/);
 assert.match(html,/id="scan-recipient-image"/);
 assert.match(html,/id="bookmarks-dialog"/);
-assert.match(html,/id="connect-bc2market"/);
-assert.match(html,/id="connect-bc2market-image"/);
+assert.match(html,/id="scan-wallet-qr"/);
+assert.doesNotMatch(html,/id="connect-bc2market"/);
 console.log('BC2 native security checks passed');
