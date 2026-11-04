@@ -89,6 +89,9 @@ body {
 }
 .icon-button svg{width:24px;height:24px;fill:currentColor}
 .scan-header{flex:0 0 42px;margin-right:10px;color:var(--gold)}
+.scan-header svg{width:29px;height:29px;overflow:visible}
+.scan-header .qr-corners{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.scan-header .qr-modules{fill:currentColor;fill-rule:evenodd}
 .icon-button {
   width: 42px;
   height: 42px;
