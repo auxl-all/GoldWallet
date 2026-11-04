@@ -88,7 +88,7 @@ public final class BackgroundMonitorWorker extends Worker {
 
     private Snapshot fetch(String scriptHash) {
         OkHttpClient client = new OkHttpClient.Builder().connectTimeout(12, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).build();
-        CountDownLatch responses = new CountDownLatch(3);
+        CountDownLatch responses = new CountDownLatch(4);
         AtomicReference<String> genesis = new AtomicReference<>();
         AtomicReference<Long> balance = new AtomicReference<>();
         AtomicReference<String> latestTxid = new AtomicReference<>("");
@@ -96,9 +96,7 @@ public final class BackgroundMonitorWorker extends Worker {
         Request request = new Request.Builder().url(ELECTRUM_URL).build();
         WebSocket socket = client.newWebSocket(request, new WebSocketListener() {
             @Override public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
-                webSocket.send(call(1, "server.features", new JSONArray()));
-                webSocket.send(call(2, "blockchain.scripthash.get_balance", new JSONArray().put(scriptHash)));
-                webSocket.send(call(3, "blockchain.scripthash.get_history", new JSONArray().put(scriptHash)));
+                webSocket.send(call(1, "server.version", new JSONArray().put("GoldWallet Background 0.4.6").put("1.4")));
             }
 
             @Override public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
@@ -107,11 +105,16 @@ public final class BackgroundMonitorWorker extends Worker {
                     if (!message.has("id")) return;
                     int id = message.optInt("id", -1);
                     if (message.has("error") && !message.isNull("error")) throw new IllegalStateException(message.get("error").toString());
-                    if (id == 1) genesis.set(message.getJSONObject("result").getString("genesis_hash"));
-                    else if (id == 2) {
+                    if (id == 1) {
+                        webSocket.send(call(2, "server.features", new JSONArray()));
+                    } else if (id == 2) {
+                        genesis.set(message.getJSONObject("result").getString("genesis_hash"));
+                        webSocket.send(call(3, "blockchain.scripthash.get_balance", new JSONArray().put(scriptHash)));
+                        webSocket.send(call(4, "blockchain.scripthash.get_history", new JSONArray().put(scriptHash)));
+                    } else if (id == 3) {
                         JSONObject result = message.getJSONObject("result");
                         balance.set(result.getLong("confirmed") + result.getLong("unconfirmed"));
-                    } else if (id == 3) {
+                    } else if (id == 4) {
                         JSONArray history = message.getJSONArray("result");
                         if (history.length() > 0) latestTxid.set(history.getJSONObject(history.length() - 1).getString("tx_hash"));
                     } else return;

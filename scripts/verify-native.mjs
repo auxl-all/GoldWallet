@@ -41,6 +41,8 @@ assert.match(bridge,/configureBackgroundMonitor/);
 assert.match(bridge,/disableBackgroundMonitor/);
 assert.match(worker,/PeriodicWorkRequest\.Builder/);
 assert.match(worker,/15, TimeUnit\.MINUTES/);
+assert.match(worker,/server\.version/);
+assert.ok(worker.indexOf('server.version') < worker.indexOf('server.features'));
 assert.match(worker,/0000000028f062b221c1a8a5cf0244b1627315f7aa5b775b931cfec46dc17ceb/);
 assert.match(worker,/blockchain\.scripthash\.get_history/);
 assert.match(worker,/blockchain\.scripthash\.get_balance/);
