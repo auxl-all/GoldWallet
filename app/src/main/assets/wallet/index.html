@@ -13,16 +13,16 @@
 </head>
 <body>
   <header class="app-header">
+    <button id="scan-wallet-qr" class="icon-button scan-header" aria-label="Scan wallet or BC2Market QR"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4M8 8h3v3H8zm5 0h3v3h-3zm-5 5h3v3H8zm5 0h1v1h-1zm2 0h1v3h-3v-1h2z"/></svg></button>
     <button id="home-wallet" class="brand" aria-label="GoldWallet home"><img src="goldwallet-icon.png" alt=""><strong>GoldWallet</strong></button>
     <nav aria-label="Wallet controls">
       <button id="history-shortcut" class="icon-button" aria-label="Recent transactions">☷</button>
       <button id="quick-sync" class="icon-button" aria-label="Synchronize wallet">↻</button>
       <button id="open-settings" class="icon-button" aria-label="Wallet settings">⚙</button>
-      <button id="scan-wallet-qr" class="icon-button" aria-label="Scan wallet or BC2Market QR">▦</button>
     </nav>
   </header>
   <main>
-    <section class="warning"><strong>BitcoinII Mainnet hot wallet.</strong> Start with a small amount. Keep the recovery phrase offline. Never import a phrase that also controls BTC or another wallet.</section>
+    <section id="admin-announcement" class="announcement" aria-live="polite" hidden></section>
     <section id="setup" data-view hidden class="card auth-card">
       <div class="setup-mark"><img src="goldwallet-icon.png" alt=""></div>
       <p class="eyebrow">SECURE MAINNET WALLET</p><h1>Start with BC2</h1>
@@ -53,6 +53,7 @@
         <p class="wallet-name">WALLET 1 <span>MAINNET</span></p>
         <div class="balance-card"><span>BALANCE</span><strong id="balance">—</strong><b>BC2</b><small id="pending-balance">Not synchronized</small></div>
         <div class="wallet-actions"><button id="open-send" class="primary">Send</button><button id="open-receive">Receive</button></div>
+        <p id="status" class="status" aria-live="polite" hidden></p>
         <div class="section-title"><span>YOUR ADDRESS</span><button id="show-receive">Show QR</button></div>
         <button id="copy-address" class="address-card"><code id="address"></code><small>Tap to copy</small></button>
         <div class="section-title"><span>RECENT TRANSACTIONS</span><button id="refresh-history">Refresh</button></div>
@@ -140,9 +141,8 @@
       <textarea id="connect-result" rows="7" readonly></textarea>
       <button id="copy-connect-proof" class="primary">Copy proof</button><button id="connect-close">Close</button>
     </dialog>
-    <p id="status" class="status" aria-live="polite"></p>
   </main>
-  <footer>GoldWallet 0.4.1 · BitcoinII Mainnet · Non-custodial hot wallet</footer>
+  <footer>GoldWallet 0.4.2 · BitcoinII Mainnet · Non-custodial hot wallet</footer>
   <script src="qrcode.min.js" defer></script>
   <script src="app.js" defer></script>
 </body>

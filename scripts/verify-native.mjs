@@ -53,4 +53,8 @@ assert.match(html,/id="scan-recipient-image"/);
 assert.match(html,/id="bookmarks-dialog"/);
 assert.match(html,/id="scan-wallet-qr"/);
 assert.doesNotMatch(html,/id="connect-bc2market"/);
+assert.ok(html.indexOf('id="scan-wallet-qr"') < html.indexOf('id="home-wallet"'));
+assert.match(html,/id="admin-announcement"[^>]*hidden/);
+assert.ok(html.indexOf('class="wallet-actions"') < html.indexOf('id="status"'));
+assert.doesNotMatch(html,/BitcoinII Mainnet hot wallet/);
 console.log('BC2 native security checks passed');
