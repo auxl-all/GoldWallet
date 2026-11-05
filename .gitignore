@@ -5,6 +5,7 @@ build/
 *.jks
 *.keystore
 releases/*.apk
+releases/*.zip
 wallet-web/node_modules/
 wallet-web/dist/
 wallet-web/.test-build/
