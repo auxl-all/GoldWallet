@@ -13,6 +13,7 @@ await build({entryPoints:[resolve(root,'src/device-security.js')],outfile:resolv
 await build({entryPoints:[resolve(root,'src/address-book.js')],outfile:resolve(testBuild,'address-book.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
 await build({entryPoints:[resolve(root,'src/connect-proof.js')],outfile:resolve(testBuild,'connect-proof.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
 await build({entryPoints:[resolve(root,'src/connect-request.js')],outfile:resolve(testBuild,'connect-request.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
+await build({entryPoints:[resolve(root,'src/trading-orders.js')],outfile:resolve(testBuild,'trading-orders.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
 await build({entryPoints:[resolve(root,'src/wallet-qr.js')],outfile:resolve(testBuild,'wallet-qr.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
 for(const file of ['index.html','app.css','qrcode.min.js','manifest.webmanifest','goldwallet-icon.png','icon-192.png','icon-512.png','sw.js'])await cp(resolve(root,'src',file),resolve(dist,file));
 const html=resolve(dist,'index.html');

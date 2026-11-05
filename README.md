@@ -2,6 +2,8 @@
 
 GoldWallet is a non-custodial Android hot wallet for BitcoinII Mainnet. This repository contains both the native Android shell and the unminified wallet source used to generate the bundled web assets.
 
+The source tree also contains an isolated, test-only EIP-712 trading-order signer for the proposed non-custodial BC2 Trading Vault. It is not wired into the released APK and cannot submit or broadcast a transaction. The trading account uses the standard EVM derivation path `m/44'/60'/0'/0/0`; users must review the typed order before a future UI enables signing.
+
 ## Trust boundary
 
 - Recovery words and private keys remain on the device.
