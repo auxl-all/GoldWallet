@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {parseConnectRequest} from '../.test-build/connect-request.mjs';
+const now=Date.parse('2026-11-01T11:55:00.000Z'),expiresAt='2026-11-01T12:00:00.000Z',network='bip122:0000000028f062b221c1a8a5cf0244b1',message=`BC2 Market login\nDomain: bc2market.com\nNetwork: ${network}\nChallenge: 00112233445566778899aabbccddeeff\nExpires: ${expiresAt}`,request={v:1,type:'bc2_connect',id:'a'.repeat(32),origin:'https://bc2market.com',network,message,expiresAt,callback:'https://bc2market.com/api/wallet-connect/verify'};
+test('accepts an authentic short-lived BC2Market request',()=>assert.deepEqual(parseConnectRequest(JSON.stringify(request),now),request));
+test('rejects a changed callback or signed message',()=>{assert.throws(()=>parseConnectRequest(JSON.stringify({...request,callback:'https://evil.example/verify'}),now),/Untrusted/);assert.throws(()=>parseConnectRequest(JSON.stringify({...request,message:message+'x'}),now),/do not match/)});
+test('rejects an expired request',()=>assert.throws(()=>parseConnectRequest(JSON.stringify(request),Date.parse(expiresAt)),/expired/));

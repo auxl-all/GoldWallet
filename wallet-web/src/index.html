@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07070d">
+  <meta name="robots" content="noindex,nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src wss://electrum.bc2market.com https://bc2market.com; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <title>GoldWallet · BitcoinII Mainnet</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="goldwallet-icon.png">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="app-header">
+    <button id="scan-wallet-qr" class="icon-button scan-header" aria-label="Scan wallet or BC2Market QR"><svg viewBox="0 0 32 32" aria-hidden="true"><path class="qr-corners" d="M12 4H7a3 3 0 0 0-3 3v5M20 4h5a3 3 0 0 1 3 3v5M28 20v5a3 3 0 0 1-3 3h-5M12 28H7a3 3 0 0 1-3-3v-5"/><path class="qr-modules" d="M8 8h7v7H8zm2.25 2.25v2.5h2.5v-2.5zM17 8h7v7h-7zm2.25 2.25v2.5h2.5v-2.5zM8 17h7v7H8zm2.25 2.25v2.5h2.5v-2.5zM17 17h3v3h-3zm4 0h3v3h-3zm-4 4h3v3h-3zm4 0h3v3h-3z"/></svg></button>
+    <button id="home-wallet" class="brand" aria-label="GoldWallet home"><img src="goldwallet-icon.png" alt=""><strong>GoldWallet</strong></button>
+    <nav aria-label="Wallet controls">
+      <button id="history-shortcut" class="icon-button" aria-label="Recent transactions">☷</button>
+      <button id="quick-sync" class="icon-button" aria-label="Synchronize wallet">↻</button>
+      <button id="open-settings" class="icon-button" aria-label="Wallet settings">⚙</button>
+    </nav>
+  </header>
+  <main>
+    <section id="admin-announcement" class="announcement" aria-live="polite" hidden></section>
+    <section id="setup" data-view hidden class="card auth-card">
+      <div class="setup-mark"><img src="goldwallet-icon.png" alt=""></div>
+      <p class="eyebrow">SECURE MAINNET WALLET</p><h1>Start with BC2</h1>
+      <p class="auth-copy">Create a new self-custody wallet or recover one you already control.</p>
+      <div class="setup-tabs" role="tablist"><button id="setup-create-tab" class="active" role="tab" aria-selected="true">Create new</button><button id="setup-restore-tab" role="tab" aria-selected="false">Restore wallet</button></div>
+      <div class="setup-points"><span>✓ Keys stay on device</span><span>✓ 12-word backup</span><span>✓ Mainnet verified</span></div>
+      <div id="setup-create-pane"><h2>Create a fresh wallet</h2><p class="hint">A new recovery phrase will be generated after your password is confirmed.</p></div>
+      <div id="setup-restore-pane" hidden><h2>Restore with 12 words</h2><label>Recovery phrase <small id="restore-count">0 / 12 words</small><textarea id="restore-phrase" rows="4" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Enter the words in the correct order"></textarea></label></div>
+      <div class="setup-passwords"><label>Password <small>12 characters minimum</small><input id="setup-password" type="password" autocomplete="new-password" minlength="12" placeholder="Create a strong password"></label><label>Confirm password<input id="setup-confirm" type="password" autocomplete="new-password" minlength="12" placeholder="Enter it again"></label></div>
+      <button id="create" class="primary setup-submit">Create Mainnet wallet</button>
+      <button id="restore" class="primary setup-submit" hidden>Restore Mainnet wallet</button>
+      <p class="auth-footnote">BC2 Market cannot recover your password or recovery phrase.</p>
+    </section>
+    <section id="unlock" data-view hidden class="card auth-card">
+      <div class="auth-mark" aria-hidden="true"><span>⌾</span></div>
+      <p class="eyebrow">WELCOME BACK</p><h1>Unlock your wallet</h1>
+      <p class="auth-copy">Your encrypted wallet stays on this device. Authenticate to continue.</p>
+      <label class="password-label" for="unlock-password">Wallet password</label>
+      <div class="password-control"><input id="unlock-password" type="password" autocomplete="current-password" placeholder="Enter your password"><button id="toggle-password" type="button" aria-label="Show password">Show</button></div>
+      <button id="unlock" class="primary auth-primary">Unlock wallet</button>
+      <button id="unlock-biometric" class="biometric-button" hidden><span aria-hidden="true">◎</span> Unlock with fingerprint</button>
+      <p class="auth-footnote">Device authentication may use fingerprint, face or screen lock, depending on your phone.</p>
+      <details class="danger-zone"><summary>Wallet options</summary><button id="remove" class="danger">Remove wallet from device</button></details>
+    </section>
+    <section id="wallet" data-view hidden>
+      <div id="backup" hidden class="card backup"><p class="eyebrow">RECOVERY PHRASE</p><h2>Write it down now</h2><code id="backup-phrase"></code><p>Anyone with these words controls your Mainnet BC2. Store them offline.</p></div>
+      <section id="wallet-home" data-wallet-panel>
+        <p class="wallet-name">WALLET 1 <span>MAINNET</span></p>
+        <div class="balance-card"><span>BALANCE</span><strong id="balance">—</strong><b>BC2</b><small id="pending-balance">Not synchronized</small></div>
+        <div class="wallet-actions"><button id="open-send" class="primary">Send</button><button id="open-receive">Receive</button></div>
+        <p id="status" class="status" aria-live="polite" hidden></p>
+        <div class="section-title"><span>YOUR ADDRESS</span><button id="show-receive">Show QR</button></div>
+        <button id="copy-address" class="address-card"><code id="address"></code><small>Tap to copy</small></button>
+        <button id="open-address-explorer" class="explorer-shortcut" type="button"><span>View address on BC2 Explorer</span><b aria-hidden="true">↗</b></button>
+        <div class="section-title"><span>RECENT TRANSACTIONS</span><button id="refresh-history">Refresh</button></div>
+        <div class="transaction-card"><ul id="history" class="history"><li>No synchronized transactions.</li></ul></div>
+      </section>
+      <section id="wallet-send" data-wallet-panel hidden class="wallet-screen">
+        <p class="eyebrow">MAINNET</p><h1>SEND BC2</h1>
+        <label class="recipient-label">Recipient address
+          <span class="recipient-input"><input id="send-recipient" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="bc1q… or 1…" aria-describedby="recipient-validity"><span class="recipient-inline-actions"><button id="open-bookmarks" type="button" aria-label="Open address book"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 6.5c4.8-1.8 8.7-.8 12 2.2 3.3-3 7.2-4 12-2.2v20c-4.8-1.8-8.7-.8-12 2.2-3.3-3-7.2-4-12-2.2zM16 8.7v20M20 11h5M20 15h5M20 19h5"/></svg></button><button id="scan-recipient" type="button" aria-label="Scan recipient QR" hidden><svg viewBox="0 0 32 32" aria-hidden="true"><path class="qr-corners" d="M12 4H7a3 3 0 0 0-3 3v5M20 4h5a3 3 0 0 1 3 3v5M28 20v5a3 3 0 0 1-3 3h-5M12 28H7a3 3 0 0 1-3-3v-5"/><path class="qr-modules" d="M8 8h7v7H8zm2.25 2.25v2.5h2.5v-2.5zM17 8h7v7h-7zm2.25 2.25v2.5h2.5v-2.5zM8 17h7v7H8zm2.25 2.25v2.5h2.5v-2.5zM17 17h3v3h-3zm4 0h3v3h-3zm-4 4h3v3h-3zm4 0h3v3h-3z"/></svg></button></span></span>
+          <small id="recipient-validity" class="address-validity">Enter a BitcoinII Mainnet address.</small>
+        </label>
+        <div class="recipient-tools"><button id="scan-recipient-image" hidden>Scan QR from image</button></div>
+        <label>Amount (BC2)<input id="send-amount" inputmode="decimal" autocomplete="off" placeholder="0.00"></label>
+        <div class="fee-line"><span>Network fee</span><strong>Calculated during review</strong></div>
+        <button id="review-send" class="primary">Review Transaction</button>
+        <div id="send-review" class="review" hidden>
+          <div class="row"><span>Recipient</span><code id="review-recipient"></code></div>
+          <div class="row"><span>Amount</span><strong id="review-amount"></strong></div>
+          <div class="row"><span>Network fee</span><strong id="review-fee"></strong></div>
+          <div class="row"><span>Change back to this wallet</span><strong id="review-change"></strong></div>
+          <div class="row"><span>Transaction ID</span><code id="review-txid"></code></div>
+          <div id="send-biometric-note" class="send-auth-note" hidden><span aria-hidden="true">◎</span><div><strong>Device approval required</strong><small>Use your fingerprint, face or screen lock to authorize this transaction.</small></div></div>
+          <label id="send-password-wrap" class="send-password">Confirm wallet password<input id="send-password" type="password" autocomplete="current-password" placeholder="Required to sign"></label>
+          <button id="broadcast-send" class="primary">Sign &amp; Broadcast</button>
+        </div>
+        <button class="back-button" data-home>Back</button>
+      </section>
+      <section id="wallet-receive" data-wallet-panel hidden class="wallet-screen receive-screen">
+        <p class="eyebrow">MAINNET</p><h1>RECEIVE BC2</h1>
+        <div id="receive-qr" class="qr" aria-label="QR code for the receive address"></div>
+        <button id="copy-receive-address" class="address-card"><code id="receive-address"></code><small>Tap to copy</small></button>
+        <p class="hint">This address is for native BitcoinII Mainnet BC2 only. Do not send BTC, xBC2 or tokens from another network.</p>
+        <button class="back-button" data-home>Back</button>
+      </section>
+      <section id="wallet-settings" data-wallet-panel hidden class="wallet-screen">
+        <p class="eyebrow">WALLET 1</p><h1>SETTINGS</h1>
+        <div class="card compact-card"><div class="row"><span>Network</span><strong id="network"></strong></div><div class="row"><span>Chain ID</span><code id="chain-id"></code></div></div>
+        <div class="card compact-card">
+          <div class="card-title"><div><p class="eyebrow">BLOCKCHAIN SYNC</p><h2>Electrum</h2></div><span id="electrum-state" class="pill">DISCONNECTED</span></div>
+          <label id="electrum-transport-wrap" hidden>Connection type<select id="electrum-transport"><option value="wss">WebSocket Secure (WSS)</option><option value="tcp">Native TCP with TLS</option></select></label>
+          <label>Secure Mainnet endpoint<input id="electrum-url" inputmode="url" autocomplete="off" spellcheck="false"></label>
+          <button id="sync-electrum" class="primary">Connect &amp; Synchronize</button>
+          <div class="metrics"><div><span>Block height</span><strong id="block-height">—</strong></div><div><span>Spendable UTXOs</span><strong id="utxo-count">—</strong></div></div>
+        </div>
+        <div class="card compact-card security-card">
+          <div class="card-title"><div><p class="eyebrow">DEVICE SECURITY</p><h2>Biometric approval</h2></div><span id="biometric-state" class="pill">CHECKING</span></div>
+          <p class="hint">Unlock the wallet and approve every outgoing transaction with your phone's secure authentication.</p>
+          <button id="enable-biometric" class="primary">Enable biometric unlock</button>
+          <button id="disable-biometric" class="danger" hidden>Disable biometric unlock</button>
+        </div>
+        <div class="card compact-card recovery-card">
+          <p class="eyebrow">WALLET BACKUP</p><h2>Recovery phrase</h2>
+          <p class="hint">Authentication is required every time. The phrase will hide automatically after 60 seconds.</p>
+          <button id="show-recovery">Authenticate &amp; reveal 12 words</button>
+          <div id="recovery-panel" class="recovery-panel" hidden><code id="recovery-phrase"></code><button id="hide-recovery">Hide recovery phrase</button></div>
+        </div>
+        <div class="card compact-card notification-card">
+          <div class="card-title"><div><p class="eyebrow">ACTIVITY ALERTS</p><h2>Transaction notifications</h2></div><span id="notification-state" class="pill">DISABLED</span></div>
+          <p class="hint">Receive an alert when a new incoming BC2 transaction is detected while the installed wallet is active.</p>
+          <button id="enable-notifications">Enable notifications</button>
+        </div>
+        <button id="settings-remove" class="danger">Remove wallet from device</button>
+        <button id="lock">Lock Wallet</button>
+        <button class="back-button" data-home>Back</button>
+      </section>
+    </section>
+    <dialog id="security-dialog" class="security-dialog">
+      <div class="dialog-mark" aria-hidden="true">◎</div>
+      <p class="eyebrow">SECURITY CHECK</p><h2 id="security-title">Authenticate</h2>
+      <p id="security-description" class="hint"></p>
+      <button id="security-biometric" class="biometric-button"><span aria-hidden="true">◎</span> Use device authentication</button>
+      <div id="security-password-divider" class="divider">or use your wallet password</div>
+      <label id="security-password-wrap">Wallet password<input id="security-password" type="password" autocomplete="current-password"></label>
+      <button id="security-password-submit" class="primary">Authenticate</button>
+      <button id="security-cancel">Cancel</button>
+    </dialog>
+    <dialog id="bookmarks-dialog" class="security-dialog">
+      <p class="eyebrow">ADDRESS BOOK</p><h2>Saved recipients</h2>
+      <div id="bookmark-list" class="bookmark-list"></div>
+      <label>Label<input id="bookmark-label" maxlength="40" placeholder="e.g. Mining wallet"></label>
+      <label>BC2 address<input id="bookmark-address" autocapitalize="none" spellcheck="false" placeholder="bc1q… or 1…"></label>
+      <button id="bookmark-save" class="primary">Save address</button><button id="bookmark-close">Close</button>
+    </dialog>
+    <dialog id="connect-dialog" class="security-dialog">
+      <p class="eyebrow">BC2 CONNECT · MAINNET</p><h2>Wallet connected</h2>
+      <p class="hint">bc2market.com verified this address. No transaction or private key left the wallet.</p>
+      <div id="connect-qr" class="qr connect-qr"></div>
+      <textarea id="connect-result" rows="7" readonly></textarea>
+      <button id="copy-connect-proof" class="primary">Copy proof</button><button id="connect-close">Close</button>
+    </dialog>
+  </main>
+  <footer>GoldWallet __GOLDWALLET_VERSION__ · BitcoinII Mainnet · Non-custodial hot wallet</footer>
+  <script src="qrcode.min.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+name: Verify source and Android build
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: wallet-web/package-lock.json
+      - run: npm ci
+        working-directory: wallet-web
+      - run: npm test
+        working-directory: wallet-web
+      - run: node scripts/sync-wallet-assets.mjs
+      - run: git diff --exit-code -- app/src/main/assets/wallet
+      - run: node scripts/scan-secrets.mjs --self-test && node scripts/scan-secrets.mjs
+      - run: node scripts/verify-native.mjs
+      - run: chmod +x gradlew && ./gradlew testDebugUnitTest assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GoldWallet-debug-verification-build
+          path: build/goldwallet-*/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

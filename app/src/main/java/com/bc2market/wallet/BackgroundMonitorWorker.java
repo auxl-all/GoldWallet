@@ -96,7 +96,7 @@ public final class BackgroundMonitorWorker extends Worker {
         Request request = new Request.Builder().url(ELECTRUM_URL).build();
         WebSocket socket = client.newWebSocket(request, new WebSocketListener() {
             @Override public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
-                webSocket.send(call(1, "server.version", new JSONArray().put("GoldWallet Background 0.4.6").put("1.4")));
+                webSocket.send(call(1, "server.version", new JSONArray().put("GoldWallet Background " + BuildConfig.VERSION_NAME).put("1.4")));
             }
 
             @Override public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
