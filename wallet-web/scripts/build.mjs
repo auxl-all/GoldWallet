@@ -3,10 +3,10 @@ import {resolve} from 'node:path';
 import {build} from 'esbuild';
 
 const root=resolve(import.meta.dirname,'..');
-const {version}=JSON.parse(await readFile(resolve(root,'package.json'),'utf8'));
+const {version,versionCode}=JSON.parse(await readFile(resolve(root,'package.json'),'utf8'));
 const dist=resolve(root,'dist'),testBuild=resolve(root,'.test-build');
 await rm(dist,{recursive:true,force:true});await rm(testBuild,{recursive:true,force:true});await mkdir(dist,{recursive:true});await mkdir(testBuild,{recursive:true});
-await build({entryPoints:[resolve(root,'src/app.js')],outfile:resolve(dist,'app.js'),bundle:true,format:'iife',platform:'browser',target:'chrome120',minify:true,define:{__GOLDWALLET_VERSION__:JSON.stringify(version)}});
+await build({entryPoints:[resolve(root,'src/app.js')],outfile:resolve(dist,'app.js'),bundle:true,format:'iife',platform:'browser',target:'chrome120',minify:true,define:{__GOLDWALLET_VERSION__:JSON.stringify(version),__GOLDWALLET_VERSION_CODE__:String(versionCode)}});
 await build({entryPoints:[resolve(root,'src/wallet-core.js')],outfile:resolve(testBuild,'wallet-core.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
 await build({entryPoints:[resolve(root,'src/electrum-client.js')],outfile:resolve(testBuild,'electrum-client.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
 await build({entryPoints:[resolve(root,'src/device-security.js')],outfile:resolve(testBuild,'device-security.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
@@ -15,6 +15,7 @@ await build({entryPoints:[resolve(root,'src/connect-proof.js')],outfile:resolve(
 await build({entryPoints:[resolve(root,'src/connect-request.js')],outfile:resolve(testBuild,'connect-request.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
 await build({entryPoints:[resolve(root,'src/wallet-qr.js')],outfile:resolve(testBuild,'wallet-qr.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
 await build({entryPoints:[resolve(root,'src/wallet-reports.js')],outfile:resolve(testBuild,'wallet-reports.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
+await build({entryPoints:[resolve(root,'src/wallet-services.js')],outfile:resolve(testBuild,'wallet-services.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
 for(const file of ['index.html','app.css','qrcode.min.js','manifest.webmanifest','goldwallet-icon.png','icon-192.png','icon-512.png','sw.js'])await cp(resolve(root,'src',file),resolve(dist,file));
 const html=resolve(dist,'index.html');
 await writeFile(html,(await readFile(html,'utf8')).replaceAll('__GOLDWALLET_VERSION__',version));

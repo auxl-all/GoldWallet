@@ -182,6 +182,20 @@ public final class NativeBridge {
         activity.runOnUiThread(() -> activity.startActivity(new Intent(Intent.ACTION_VIEW, uri)));
     }
     void setQrCallback(String callbackId) { qrCallback = callbackId; }
+    @JavascriptInterface public void openUpdate(String value, String callbackId) {
+        if (value == null) { callback(callbackId, false, "Invalid update link."); return; }
+        Uri uri = Uri.parse(value);
+        String host = uri.getHost(), path = uri.getPath();
+        boolean https = "https".equals(uri.getScheme()) && uri.getUserInfo() == null && uri.getPort() == -1 && uri.getFragment() == null;
+        boolean market = "bc2market.com".equals(host) && path != null && path.matches("/downloads/GoldWallet-v[0-9]+[.][0-9]+[.][0-9]+-debug[.]apk") && uri.getQuery() == null;
+        boolean github = "github.com".equals(host) && path != null && path.matches("/auxl-all/GoldWallet/releases/tag/v[0-9]+[.][0-9]+[.][0-9]+") && uri.getQuery() == null;
+        boolean play = "play.google.com".equals(host) && "/store/apps/details".equals(path) && "com.bc2market.wallet".equals(uri.getQueryParameter("id")) && uri.getQueryParameterNames().size() == 1;
+        if (!https || !(market || github || play)) { callback(callbackId, false, "Untrusted update link."); return; }
+        activity.runOnUiThread(() -> {
+            try { activity.startActivity(new Intent(Intent.ACTION_VIEW, uri)); callback(callbackId, true, "opened"); }
+            catch (RuntimeException error) { callback(callbackId, false, "No application can open the update link."); }
+        });
+    }
     void finishQrScan(String contents) { String id = qrCallback; qrCallback = null; if (id != null) callback(id, contents != null, contents == null ? "QR scan cancelled." : contents); }
     void finishQrError(String message) { String id = qrCallback; qrCallback = null; if (id != null) callback(id, false, message); }
 
