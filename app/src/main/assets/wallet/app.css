@@ -181,7 +181,9 @@ h2 {
   max-width: 100%;
   font-size: clamp(2.2rem, 10vw, 3.15rem);
   line-height: 1.15;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  font-variant-numeric: tabular-nums;
 }
 .balance-card b {
   color: var(--gold);
@@ -630,3 +632,11 @@ footer {
 .report-table th:first-child, .report-table td:first-child { text-align: left; }
 .report-table th { color: var(--gold); }
 #report-state { overflow-wrap: anywhere; }
+
+.balance-line { display: flex; align-items: baseline; justify-content: center; gap: 10px; width: 100%; min-width: 0; margin: 8px 0; }
+.balance-line #balance { display: block; flex: 0 1 auto; min-width: 0; max-width: calc(100% - 3.5rem); white-space: nowrap; }
+.balance-line b { flex: 0 0 auto; font-size: 1rem; letter-spacing: .06em; }
+.balance-usd { color: #d5c6b4; font-size: 1rem; font-variant-numeric: tabular-nums; }
+#balance-price-note { max-width: 100%; text-align: center; font-size: .68rem; }
+#wallet-update-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+#wallet-update-banner button { width: auto; margin: 0; padding: 9px 13px; }

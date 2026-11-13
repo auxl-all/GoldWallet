@@ -22,6 +22,7 @@
     </nav>
   </header>
   <main>
+    <section id="wallet-update-banner" class="announcement" hidden><strong id="update-banner-text"></strong><button id="open-update">Download update</button></section>
     <section id="admin-announcement" class="announcement" aria-live="polite" hidden></section>
     <section id="setup" data-view hidden class="card auth-card">
       <div class="setup-mark"><img src="goldwallet-icon.png" alt=""></div>
@@ -51,7 +52,7 @@
       <div id="backup" hidden class="card backup"><p class="eyebrow">RECOVERY PHRASE</p><h2>Write it down now</h2><code id="backup-phrase"></code><p>Anyone with these words controls your Mainnet BC2. Store them offline.</p></div>
       <section id="wallet-home" data-wallet-panel>
         <p class="wallet-name">WALLET 1 <span>MAINNET</span></p>
-        <div class="balance-card"><span>BALANCE</span><strong id="balance">—</strong><b>BC2</b><small id="pending-balance">Not synchronized</small></div>
+        <div class="balance-card"><span>BALANCE</span><div class="balance-line"><strong id="balance">—</strong><b>BC2</b></div><div id="balance-usd" class="balance-usd" aria-live="polite">USD value unavailable</div><small id="balance-price-note">Estimated market value</small><small id="pending-balance">Not synchronized</small></div>
         <div class="wallet-actions"><button id="open-send" class="primary">Send</button><button id="open-receive">Receive</button></div>
         <p id="status" class="status" aria-live="polite" hidden></p>
         <button class="explorer-shortcut" data-open-reports><span>Balance &amp; cash flow</span><b aria-hidden="true">↗</b></button>
@@ -144,11 +145,17 @@
           <button id="enable-notifications">Enable notifications</button>
         </div>
 </div></details>
-<details class="settings-group" name="settings-group"><summary><strong>About GoldWallet</strong><small>Version and support</small></summary><div class="settings-content"><p>GoldWallet __GOLDWALLET_VERSION__</p><p class="hint">BitcoinII Mainnet · Non-custodial wallet</p></div></details>
+<details class="settings-group" name="settings-group"><summary><strong>About GoldWallet</strong><small>Version and support</small></summary><div class="settings-content"><p>GoldWallet __GOLDWALLET_VERSION__</p><button id="check-updates">Check for updates</button><p id="update-status" class="hint" role="status">Updates are checked automatically.</p><p class="hint">BitcoinII Mainnet · Non-custodial wallet</p></div></details>
 <details class="settings-group" name="settings-group"><summary><strong>Remove wallet</strong><small>Remove the encrypted wallet from this device</small></summary><div class="settings-content"><p class="hint">Your recovery phrase is required to restore access after removal.</p><button id="settings-remove" class="danger">Authenticate &amp; remove wallet</button></div></details>
         <button class="back-button" data-home>Back</button>
       </section>
     </section>
+    <dialog id="update-dialog" class="security-dialog">
+      <p class="eyebrow">GOLDWALLET UPDATE</p><h2 id="update-title">New version available</h2>
+      <p id="update-notes" class="hint"></p><p class="hint">Download the new version from an official source below, then follow Android's installation prompts.</p>
+      <button id="update-google-play" class="primary" hidden>Open Google Play</button><button id="update-bc2market" class="primary" hidden>Download from BC2Market</button><button id="update-github" hidden>Download from GitHub</button>
+      <p id="update-download-status" class="hint" role="status"></p><button id="update-later">Later</button>
+    </dialog>
     <dialog id="security-dialog" class="security-dialog">
       <div class="dialog-mark" aria-hidden="true">◎</div>
       <p class="eyebrow">SECURITY CHECK</p><h2 id="security-title">Authenticate</h2>

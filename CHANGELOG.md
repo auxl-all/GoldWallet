@@ -1,3 +1,10 @@
+## 0.4.9 — 2026-11-13
+
+- Keep the balance and BC2 label on one line; fit long balances to narrow screens without duplicate tickers.
+- Show an estimated USD value below the confirmed BC2 balance, with CoinGecko source/time and unavailable/stale handling.
+- Check a stable release feed on startup, periodically while active, and manually from About. Prompt for newer version codes and offer BC2Market/GitHub downloads.
+- Support a validated optional Google Play listing URL in the release feed; no store link is shown before a listing is configured.
+
 ## 0.4.8 — 2026-11-13
 
 - Group Settings into expandable wallet backup, security, network, reports, notifications, about and removal sections.

@@ -6,6 +6,7 @@ import {normalizeRecipientQr,recipientAddressState,upsertBookmark} from './addre
 import {parseConnectRequest} from './connect-request.js';
 import {classifyWalletQr} from './wallet-qr.js';
 import {balanceReport,reportAmount,reportCsv,reportDate} from './wallet-reports.js';
+import {parseRelease,parseUsdQuote,usdBalance} from './wallet-services.js';
 import {newTransactionNotifications} from './transaction-notifications.js';
 
 if(nativeAvailable())globalThis.__bc2NativeElectrumRequest=(host,port,tls,request)=>nativeRequest('electrumRequest',host,port,tls,request);
@@ -15,6 +16,11 @@ const VAULT_KEY='bc2-mobile-mainnet-v1';
 const NOTIFICATION_KEY='bc2-mobile-mainnet-notifications';
 const BOOKMARK_KEY='bc2-mobile-mainnet-bookmarks';
 const EXPLORER_BASE='https://bc2market.com/explorer';
+let usdQuote=null;
+let latestRelease=null;
+let lastUpdateCheck=0;
+let updateChecking=false;
+let updatePrompted='';
 let mnemonic='';
 let electrum=null;
 let snapshot=null;
@@ -52,15 +58,15 @@ async function notifyNewTransactions(items,address){
   for(const item of newTransactionNotifications(items,previous)){const received=item.direction==='received',title=received?'BC2 received':'BC2 sent',body=`${received?'+':'−'}${formatBc2(item.amount)} BC2 · ${item.confirmations?'confirmed':'pending'}`;if(nativeAvailable())globalThis.BC2Native.notifyReceived(title,body);else await registration?.showNotification(title,{body,icon:'icon-192.png',badge:'icon-192.png',tag:`bc2-${item.txid}`,data:{url:'./'}})}
 }
 
-function openWallet(phrase){mnemonic=phrase;const wallet=deriveWallet(phrase),electrumUrl=localStorage.getItem('bc2-electrum-mainnet-url')||DEFAULT_ELECTRUM_URL;$('#address').textContent=wallet.address;$('#receive-address').textContent=wallet.address;$('#network').textContent=MAINNET.name;$('#chain-id').textContent=MAINNET.chainId;$('#electrum-url').value=electrumUrl;$('#electrum-transport').value=electrumUrl.startsWith('electrum+ssl://')?'tcp':'wss';const qr=$('#receive-qr');qr.textContent='';new QRCode(qr,{text:`bitcoinII:${wallet.address}`,width:196,height:196,colorDark:'#050506',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});resetSnapshot();resetSend();show('wallet');showWalletPanel('wallet-home');updateSecurityUi();clearInterval(syncTimer);syncTimer=setInterval(()=>{if(!document.hidden)syncElectrum(true)},15000);status('Mainnet wallet unlocked. Synchronizing…');queueMicrotask(()=>{syncElectrum();if(pendingConnectRequest)openSecurityPrompt('connect')})}
+function openWallet(phrase){mnemonic=phrase;const wallet=deriveWallet(phrase),electrumUrl=localStorage.getItem('bc2-electrum-mainnet-url')||DEFAULT_ELECTRUM_URL;$('#address').textContent=wallet.address;$('#receive-address').textContent=wallet.address;$('#network').textContent=MAINNET.name;$('#chain-id').textContent=MAINNET.chainId;$('#electrum-url').value=electrumUrl;$('#electrum-transport').value=electrumUrl.startsWith('electrum+ssl://')?'tcp':'wss';const qr=$('#receive-qr');qr.textContent='';new QRCode(qr,{text:`bitcoinII:${wallet.address}`,width:196,height:196,colorDark:'#050506',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});resetSnapshot();resetSend();show('wallet');showWalletPanel('wallet-home');updateSecurityUi();clearInterval(syncTimer);syncTimer=setInterval(()=>{if(!document.hidden)syncElectrum(true)},15000);status('Mainnet wallet unlocked. Synchronizing…');queueMicrotask(()=>{syncElectrum();loadUsdQuote();if(pendingConnectRequest)openSecurityPrompt('connect')})}
 const formatBc2=sats=>(Number(sats)/1e8).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:8});
-function resetSnapshot(){clearReport();snapshot=null;$('#balance').textContent='— BC2';$('#pending-balance').textContent='Not synchronized';$('#electrum-state').textContent='DISCONNECTED';$('#electrum-state').className='pill';$('#block-height').textContent='—';$('#utxo-count').textContent='—';$('#history').innerHTML='<li>No synchronized transactions.</li>';resetSendReview()}
+function resetSnapshot(){clearReport();snapshot=null;$('#balance').textContent='—';renderUsdBalance();fitBalance();$('#pending-balance').textContent='Not synchronized';$('#electrum-state').textContent='DISCONNECTED';$('#electrum-state').className='pill';$('#block-height').textContent='—';$('#utxo-count').textContent='—';$('#history').innerHTML='<li>No synchronized transactions.</li>';resetSendReview()}
 function renderHistory(items){
   const list=$('#history');list.replaceChildren();
   if(!items.length){const empty=document.createElement('li');empty.textContent='No transactions for this address.';list.append(empty);return}
   for(const item of items){const li=document.createElement('li'),label=document.createElement('strong'),amount=document.createElement('strong'),meta=document.createElement('span'),confirmations=document.createElement('small'),txid=document.createElement('a');label.textContent=item.direction==='sent'?'Sent':item.direction==='received'?'Received':'Transaction';label.className=item.direction;amount.className=item.direction;amount.textContent=item.direction==='unknown'?'Details unavailable':`${item.direction==='sent'?'−':'+'}${formatBc2(item.amount)} BC2`;meta.textContent=item.fee>0?`Fee ${formatBc2(item.fee)} BC2`:item.height>0?`Block ${item.height.toLocaleString()}`:'Pending';confirmations.textContent=item.confirmations?`${item.confirmations} confirmation${item.confirmations===1?'':'s'}`:'Unconfirmed';txid.className='explorer-txid';txid.href=`${EXPLORER_BASE}?q=${encodeURIComponent(item.txid)}`;txid.textContent=`${item.txid} ↗`;txid.addEventListener('click',event=>{event.preventDefault();openExplorer(item.txid)});li.append(label,amount,meta,confirmations,txid);list.append(li)}
 }
-function renderSnapshot(value,walletScriptHex){if(currentReport&&reportFingerprint(value)!==currentReport.fingerprint){currentReport=null;$('#report-result').hidden=true;$('#report-state').textContent='Wallet activity changed. Generate a fresh report.'}snapshot=value;$('#balance').textContent=`${formatBc2(value.confirmed)} BC2`;$('#pending-balance').textContent=`${formatBc2(value.unconfirmed)} BC2 pending`;$('#block-height').textContent=value.height.toLocaleString();$('#utxo-count').textContent=String(value.utxos.filter(item=>Number(item.height)>0).length);const items=(value.transactions||[]).map(item=>summarizeWalletTransaction({...item,walletScriptHex,chainHeight:value.height}));renderHistory(items);notifyNewTransactions(items,deriveWallet(mnemonic).address).catch(()=>{});if(nativeAvailable()){const latest=[...(value.history||[])].reverse().find(item=>item.tx_hash)?.tx_hash||'';globalThis.BC2Native.configureBackgroundMonitor(deriveWallet(mnemonic).scriptHash,String(Number(value.confirmed)+Number(value.unconfirmed)),latest)} }
+function renderSnapshot(value,walletScriptHex){if(currentReport&&reportFingerprint(value)!==currentReport.fingerprint){currentReport=null;$('#report-result').hidden=true;$('#report-state').textContent='Wallet activity changed. Generate a fresh report.'}snapshot=value;$('#balance').textContent=formatBc2(value.confirmed);fitBalance();renderUsdBalance();$('#pending-balance').textContent=`${formatBc2(value.unconfirmed)} BC2 pending`;$('#block-height').textContent=value.height.toLocaleString();$('#utxo-count').textContent=String(value.utxos.filter(item=>Number(item.height)>0).length);const items=(value.transactions||[]).map(item=>summarizeWalletTransaction({...item,walletScriptHex,chainHeight:value.height}));renderHistory(items);notifyNewTransactions(items,deriveWallet(mnemonic).address).catch(()=>{});if(nativeAvailable()){const latest=[...(value.history||[])].reverse().find(item=>item.tx_hash)?.tx_hash||'';globalThis.BC2Native.configureBackgroundMonitor(deriveWallet(mnemonic).scriptHash,String(Number(value.confirmed)+Number(value.unconfirmed)),latest)} }
 function resetSendReview(){pendingTransaction=null;$('#send-review').hidden=true}
 function updateRecipientValidity(){const field=$('#send-recipient'),message=$('#recipient-validity'),state=recipientAddressState(field.value,addressScript),hasValue=Boolean(field.value.trim());message.textContent=state.message;message.className=`address-validity ${hasValue?(state.valid?'valid':'invalid'):''}`.trim();field.setAttribute('aria-invalid',hasValue?String(!state.valid):'');$('#review-send').disabled=!state.valid;return state.valid}
 function resetSend(){$('#send-recipient').value='';$('#send-amount').value='';resetSendReview();updateRecipientValidity()}
@@ -122,6 +128,60 @@ async function showConnectProof(phrase){
   if(!response.ok)throw new Error(data.error||'BC2Market rejected the connection proof.');
   pendingConnectRequest=null;$('#security-dialog').close();$('#connect-result').value=JSON.stringify(proof,null,2);const qr=$('#connect-qr');qr.replaceChildren();qr.textContent='✓';$('#connect-dialog').showModal();status(`BC2Market connected to ${proof.address}. No transaction was created.`);
 }
+
+
+function fitBalance(){
+  const number=$('#balance'),line=number.parentElement;if(!line.clientWidth)return;
+  number.style.fontSize='';
+  const available=line.clientWidth-line.querySelector('b').getBoundingClientRect().width-12;
+  if(number.scrollWidth>available){const size=parseFloat(getComputedStyle(number).fontSize);number.style.fontSize=Math.max(10,Math.floor(size*available/number.scrollWidth*.97))+'px'}
+}
+new ResizeObserver(fitBalance).observe($('.balance-line'));
+function renderUsdBalance(){
+  try{
+    if(!mnemonic||!snapshot||!usdQuote)throw new Error('USD value unavailable');
+    $('#balance-usd').textContent=usdBalance(snapshot.confirmed,usdQuote);
+    $('#balance-price-note').textContent='Estimate · CoinGecko · '+new Date(usdQuote.updatedAt*1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }catch{$('#balance-usd').textContent='USD value unavailable';$('#balance-price-note').textContent='Estimated market value'}
+}
+async function walletJson(path){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
+  try{const response=await fetch('https://bc2market.com'+path,{cache:'no-store',credentials:'omit',signal:controller.signal});if(!response.ok)throw new Error('Service unavailable.');return await response.json()}finally{clearTimeout(timer)}
+}
+async function loadUsdQuote(){
+  if(!mnemonic)return;
+  try{usdQuote=parseUsdQuote(await walletJson('/api/wallet/price'))}catch{usdQuote=null}
+  renderUsdBalance();
+}
+function showUpdate(){
+  if(!latestRelease?.newer)return;
+  $('#update-title').textContent='GoldWallet '+latestRelease.versionName+' is available';
+  $('#update-notes').textContent=latestRelease.releaseNotes;
+  for(const [channel,id] of Object.entries({bc2market:'update-bc2market',github:'update-github',googlePlay:'update-google-play'}))$('#'+id).hidden=!latestRelease.downloads[channel];
+  $('#update-bc2market').classList.toggle('primary',!latestRelease.downloads.googlePlay);
+  $('#update-download-status').textContent='';
+  if(!$('dialog[open]')){$('#update-dialog').showModal();updatePrompted=latestRelease.versionName}
+}
+async function checkUpdates(manual=false){
+  if(updateChecking||(!manual&&Date.now()-lastUpdateCheck<15*60000))return;
+  updateChecking=true;lastUpdateCheck=Date.now();$('#check-updates').disabled=true;
+  try{
+    latestRelease=parseRelease(await walletJson('/api/wallet/release'),__GOLDWALLET_VERSION_CODE__);
+    $('#wallet-update-banner').hidden=!latestRelease.newer;
+    $('#update-banner-text').textContent=latestRelease.newer?'GoldWallet '+latestRelease.versionName+' is available.':'';
+    $('#update-status').textContent=latestRelease.newer?'New version: '+latestRelease.versionName:'You have the latest available version ('+__GOLDWALLET_VERSION__+').';
+    if(latestRelease.newer&&(manual||updatePrompted!==latestRelease.versionName))showUpdate();
+  }catch{$('#update-status').textContent='Could not check for updates. Try again later.'}finally{updateChecking=false;$('#check-updates').disabled=false}
+}
+async function downloadUpdate(channel){
+  const url=latestRelease?.downloads[channel];if(!url)return;
+  try{if(nativeAvailable())await nativeRequest('openUpdate',url);else window.open(url,'_blank','noopener,noreferrer')}catch(error){$('#update-download-status').textContent=error.message}
+}
+$('#check-updates').addEventListener('click',()=>checkUpdates(true));$('#open-update').addEventListener('click',showUpdate);
+$('#update-later').addEventListener('click',()=>$('#update-dialog').close());
+for(const [channel,id] of Object.entries({bc2market:'update-bc2market',github:'update-github',googlePlay:'update-google-play'}))$('#'+id).addEventListener('click',()=>downloadUpdate(channel));
+checkUpdates();setInterval(()=>{if(!document.hidden){checkUpdates();loadUsdQuote()}},5*60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){checkUpdates();renderUsdBalance();fitBalance()}});
 
 function reportFingerprint(value){return JSON.stringify([value.confirmed,value.unconfirmed,[...value.history].map(item=>[item.tx_hash,item.height]).sort((a,b)=>a[0].localeCompare(b[0]))])}
 function clearReport(){reportSession++;currentReport=null;$('#report-result').hidden=true;$('#report-rows').replaceChildren();$('#report-state').textContent='Generate a report to load the complete transaction history.'}
@@ -186,7 +246,7 @@ $('#restore-phrase').addEventListener('input',event=>{$('#restore-count').textCo
 $('#unlock-wallet').addEventListener('click',async()=>{try{openWallet(await decryptMnemonic(vault(),$('#unlock-password').value));$('#unlock-password').value=''}catch(error){status(error.message,true)}});
 $('#unlock-biometric').addEventListener('click',async()=>{const button=$('#unlock-biometric');button.disabled=true;try{openWallet(await unlockBiometric());status('Wallet unlocked with device authentication.')}catch(error){status(error.message,true)}finally{button.disabled=false}});
 $('#toggle-password').addEventListener('click',()=>{const input=$('#unlock-password'),showPassword=input.type==='password';input.type=showPassword?'text':'password';$('#toggle-password').setAttribute('aria-label',showPassword?'Hide password':'Show password')});
-$('#lock').addEventListener('click',()=>{clearReport();hideRecovery();clearInterval(syncTimer);electrum?.close();electrum=null;mnemonic='';route();status('Wallet locked.');});
+$('#lock').addEventListener('click',()=>{clearReport();hideRecovery();clearInterval(syncTimer);electrum?.close();electrum=null;mnemonic='';snapshot=null;renderUsdBalance();route();status('Wallet locked.');});
 $('#sync-electrum').addEventListener('click',syncElectrum);
 $('#quick-sync').addEventListener('click',()=>{if(!mnemonic)return status('Unlock the wallet before synchronizing.',true);syncElectrum()});
 $('#refresh-history').addEventListener('click',syncElectrum);
