@@ -610,3 +610,23 @@ footer {
 #connect-result { width: 100%; margin: 12px 0; padding: 12px; border: 1px solid #44331f; border-radius: 12px; background: #08080b; color: #d9c49d; font: .72rem/1.5 ui-monospace,monospace; resize: none; }
 @media(max-width:420px){.recipient-input > input{padding-left:14px;padding-right:105px}.recipient-inline-actions{right:5px}}
 @media(max-width:390px){.brand strong{display:none}}
+
+.settings-group { margin: 12px 0; border: 1px solid var(--line); border-radius: 14px; background: #101015; }
+.settings-group > summary { cursor: pointer; padding: 18px; min-height: 64px; }
+.settings-group > summary strong { color: var(--gold); }
+.settings-group > summary small { display: block; margin: 7px 0 0 18px; color: #a7a19a; font-size: .78rem; }
+.settings-group[open] > summary { border-bottom: 1px solid var(--line); }
+.settings-content { padding: 14px; }
+.settings-content .compact-card { margin: 0 0 14px; }
+.report-date-fields, .report-metrics { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.report-date-fields input { min-width: 0; }
+.report-metrics > div { display: grid; gap: 10px; padding: 16px 12px; border: 1px solid var(--line); border-radius: 12px; background: #101015; min-width: 0; }
+.report-metrics span { color: #a7a19a; font-size: .8rem; }
+.report-metrics strong { color: var(--gold); font-size: .95rem; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.report-table-wrap { overflow-x: auto; margin: 18px 0; border: 1px solid var(--line); border-radius: 10px; }
+.report-table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: .78rem; white-space: nowrap; }
+.report-table caption { padding: 14px; text-align: left; color: #a7a19a; }
+.report-table th, .report-table td { padding: 12px; text-align: right; border-bottom: 1px solid var(--line); }
+.report-table th:first-child, .report-table td:first-child { text-align: left; }
+.report-table th { color: var(--gold); }
+#report-state { overflow-wrap: anywhere; }

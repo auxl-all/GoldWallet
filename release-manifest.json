@@ -1,13 +1,11 @@
 {
   "applicationId": "com.bc2market.wallet",
-  "versionName": "0.4.7",
-  "versionCode": 17,
+  "versionName": "0.4.8",
+  "versionCode": 18,
   "releaseChannel": "testing",
-  "sourceCommit": "07e81e66df92413fe0f415e422c29d9b50be7d99",
-  "sourceArchive": "GoldWallet-v0.4.7-source.zip",
-  "sourceArchiveSha256": "230b83c26d7ca696af311989a819c2a8257b64205938a92c12c575628297a561",
-  "apk": "GoldWallet-v0.4.7-debug.apk",
-  "apkSha256": "18ec959286fbff4d6aa9dc1529d388719b016f2dedaf31f8ab8f0e41a156144b",
+  "sourceArchive": "GoldWallet-v0.4.8-source.zip",
+  "apk": "GoldWallet-v0.4.8-debug.apk",
+  "apkSha256": "e1bd9a77332561bd7addc1bc1e44ea81c9d60b0555f438fce900212943c7cb99",
   "signingCertificateSha256": "d0dc96cf112edaeac1f8b3219a0b1c92bdf49af94905386699214c716702de09",
   "signingIdentity": "Android Debug",
   "productionSigned": false,
@@ -17,5 +15,7 @@
     "compileSdk": 35,
     "targetSdk": 35,
     "androidBuildTools": "35.0.0"
-  }
+  },
+  "sourceRef": "v0.4.8",
+  "sourceArchiveChecksum": "GoldWallet-v0.4.8-source.zip.sha256"
 }

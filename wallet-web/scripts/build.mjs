@@ -14,6 +14,7 @@ await build({entryPoints:[resolve(root,'src/address-book.js')],outfile:resolve(t
 await build({entryPoints:[resolve(root,'src/connect-proof.js')],outfile:resolve(testBuild,'connect-proof.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
 await build({entryPoints:[resolve(root,'src/connect-request.js')],outfile:resolve(testBuild,'connect-request.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
 await build({entryPoints:[resolve(root,'src/wallet-qr.js')],outfile:resolve(testBuild,'wallet-qr.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
+await build({entryPoints:[resolve(root,'src/wallet-reports.js')],outfile:resolve(testBuild,'wallet-reports.mjs'),bundle:true,format:'esm',platform:'node',target:'node20'});
 for(const file of ['index.html','app.css','qrcode.min.js','manifest.webmanifest','goldwallet-icon.png','icon-192.png','icon-512.png','sw.js'])await cp(resolve(root,'src',file),resolve(dist,file));
 const html=resolve(dist,'index.html');
 await writeFile(html,(await readFile(html,'utf8')).replaceAll('__GOLDWALLET_VERSION__',version));

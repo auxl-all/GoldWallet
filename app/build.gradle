@@ -1,6 +1,6 @@
 plugins { id 'com.android.application' }
 
-layout.buildDirectory = rootProject.layout.buildDirectory.dir('goldwallet-0.4.7')
+layout.buildDirectory = rootProject.layout.buildDirectory.dir('goldwallet-0.4.8')
 
 android {
     namespace 'com.bc2market.wallet'
@@ -10,8 +10,8 @@ android {
         applicationId 'com.bc2market.wallet'
         minSdk 28
         targetSdk 35
-        versionCode 17
-        versionName '0.4.7'
+        versionCode 18
+        versionName '0.4.8'
     }
 
     buildTypes {

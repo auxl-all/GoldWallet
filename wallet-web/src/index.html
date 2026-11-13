@@ -42,7 +42,7 @@
       <p class="auth-copy">Your encrypted wallet stays on this device. Authenticate to continue.</p>
       <label class="password-label" for="unlock-password">Wallet password</label>
       <div class="password-control"><input id="unlock-password" type="password" autocomplete="current-password" placeholder="Enter your password"><button id="toggle-password" type="button" aria-label="Show password">Show</button></div>
-      <button id="unlock" class="primary auth-primary">Unlock wallet</button>
+      <button id="unlock-wallet" class="primary auth-primary">Unlock wallet</button>
       <button id="unlock-biometric" class="biometric-button" hidden><span aria-hidden="true">◎</span> Unlock with fingerprint</button>
       <p class="auth-footnote">Device authentication may use fingerprint, face or screen lock, depending on your phone.</p>
       <details class="danger-zone"><summary>Wallet options</summary><button id="remove" class="danger">Remove wallet from device</button></details>
@@ -54,6 +54,7 @@
         <div class="balance-card"><span>BALANCE</span><strong id="balance">—</strong><b>BC2</b><small id="pending-balance">Not synchronized</small></div>
         <div class="wallet-actions"><button id="open-send" class="primary">Send</button><button id="open-receive">Receive</button></div>
         <p id="status" class="status" aria-live="polite" hidden></p>
+        <button class="explorer-shortcut" data-open-reports><span>Balance &amp; cash flow</span><b aria-hidden="true">↗</b></button>
         <div class="section-title"><span>YOUR ADDRESS</span><button id="show-receive">Show QR</button></div>
         <button id="copy-address" class="address-card"><code id="address"></code><small>Tap to copy</small></button>
         <button id="open-address-explorer" class="explorer-shortcut" type="button"><span>View address on BC2 Explorer</span><b aria-hidden="true">↗</b></button>
@@ -89,9 +90,45 @@
         <p class="hint">This address is for native BitcoinII Mainnet BC2 only. Do not send BTC, xBC2 or tokens from another network.</p>
         <button class="back-button" data-home>Back</button>
       </section>
+      <section id="wallet-reports" data-wallet-panel hidden class="wallet-screen">
+        <p class="eyebrow">WALLET REPORTS · UTC+7</p><h1>Balance &amp; cash flow</h1>
+        <p class="hint">Reports cover this GoldWallet address. Change back to the wallet is excluded from received and sent totals. Fees are shown separately.</p>
+        <div class="card compact-card report-controls">
+          <label>Period<select id="report-period"><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="45" selected>Last 45 days</option><option value="90">Last 90 days</option><option value="custom">Custom dates</option></select></label>
+          <div class="report-date-fields"><label>From<input id="report-start" type="date"></label><label>Through<input id="report-end" type="date"></label></div>
+          <button id="generate-report" class="primary">Generate report</button>
+          <p id="report-state" class="hint" role="status" aria-live="polite">Generate a report to load the complete transaction history.</p>
+        </div>
+        <div id="report-result" hidden>
+          <p id="report-asof" class="hint"></p>
+          <div class="report-metrics">
+            <div><span>Opening balance</span><strong id="report-opening"></strong></div><div><span>Closing balance</span><strong id="report-closing"></strong></div>
+            <div><span>Received</span><strong id="report-incoming"></strong></div><div><span>Sent</span><strong id="report-outgoing"></strong></div>
+            <div><span>Network fees</span><strong id="report-fees"></strong></div><div><span>Net change</span><strong id="report-net"></strong></div>
+          </div>
+          <p id="report-pending" class="hint"></p>
+          <button id="export-report">Save CSV report</button>
+          <div class="report-table-wrap" role="region" aria-label="Daily balance and cash flow" tabindex="0"><table class="report-table"><caption>Daily confirmed activity · BC2</caption><thead><tr><th scope="col">Date</th><th scope="col">Received</th><th scope="col">Sent</th><th scope="col">Fees</th><th scope="col">Net</th><th scope="col">Balance</th></tr></thead><tbody id="report-rows"></tbody></table></div>
+        </div>
+        <button class="back-button" data-home>Back</button>
+      </section>
       <section id="wallet-settings" data-wallet-panel hidden class="wallet-screen">
         <p class="eyebrow">WALLET 1</p><h1>SETTINGS</h1>
-        <div class="card compact-card"><div class="row"><span>Network</span><strong id="network"></strong></div><div class="row"><span>Chain ID</span><code id="chain-id"></code></div></div>
+<details class="settings-group" name="settings-group"><summary><strong>Wallet & backup</strong><small>Recovery phrase and wallet information</small></summary><div class="settings-content">        <div class="card compact-card recovery-card">
+          <p class="eyebrow">WALLET BACKUP</p><h2>Recovery phrase</h2>
+          <p class="hint">Authentication is required every time. The phrase will hide automatically after 60 seconds.</p>
+          <button id="show-recovery">Authenticate &amp; reveal 12 words</button>
+          <div id="recovery-panel" class="recovery-panel" hidden><code id="recovery-phrase"></code><button id="hide-recovery">Hide recovery phrase</button></div>
+        </div>
+</div></details>
+<details class="settings-group" name="settings-group"><summary><strong>Security</strong><small>Device approval and wallet lock</small></summary><div class="settings-content">        <div class="card compact-card security-card">
+          <div class="card-title"><div><p class="eyebrow">DEVICE SECURITY</p><h2>Biometric approval</h2></div><span id="biometric-state" class="pill">CHECKING</span></div>
+          <p class="hint">Unlock the wallet and approve every outgoing transaction with your phone's secure authentication.</p>
+          <button id="enable-biometric" class="primary">Enable biometric unlock</button>
+          <button id="disable-biometric" class="danger" hidden>Disable biometric unlock</button>
+        </div>
+<button id="lock">Lock Wallet</button></div></details>
+<details class="settings-group" name="settings-group"><summary><strong>Network & connection</strong><small>Electrum endpoint and sync status</small></summary><div class="settings-content">        <div class="card compact-card"><div class="row"><span>Network</span><strong id="network"></strong></div><div class="row"><span>Chain ID</span><code id="chain-id"></code></div></div>
         <div class="card compact-card">
           <div class="card-title"><div><p class="eyebrow">BLOCKCHAIN SYNC</p><h2>Electrum</h2></div><span id="electrum-state" class="pill">DISCONNECTED</span></div>
           <label id="electrum-transport-wrap" hidden>Connection type<select id="electrum-transport"><option value="wss">WebSocket Secure (WSS)</option><option value="tcp">Native TCP with TLS</option></select></label>
@@ -99,25 +136,16 @@
           <button id="sync-electrum" class="primary">Connect &amp; Synchronize</button>
           <div class="metrics"><div><span>Block height</span><strong id="block-height">—</strong></div><div><span>Spendable UTXOs</span><strong id="utxo-count">—</strong></div></div>
         </div>
-        <div class="card compact-card security-card">
-          <div class="card-title"><div><p class="eyebrow">DEVICE SECURITY</p><h2>Biometric approval</h2></div><span id="biometric-state" class="pill">CHECKING</span></div>
-          <p class="hint">Unlock the wallet and approve every outgoing transaction with your phone's secure authentication.</p>
-          <button id="enable-biometric" class="primary">Enable biometric unlock</button>
-          <button id="disable-biometric" class="danger" hidden>Disable biometric unlock</button>
-        </div>
-        <div class="card compact-card recovery-card">
-          <p class="eyebrow">WALLET BACKUP</p><h2>Recovery phrase</h2>
-          <p class="hint">Authentication is required every time. The phrase will hide automatically after 60 seconds.</p>
-          <button id="show-recovery">Authenticate &amp; reveal 12 words</button>
-          <div id="recovery-panel" class="recovery-panel" hidden><code id="recovery-phrase"></code><button id="hide-recovery">Hide recovery phrase</button></div>
-        </div>
-        <div class="card compact-card notification-card">
+</div></details>
+<details class="settings-group" name="settings-group"><summary><strong>Reports & data</strong><small>Daily balances and cash flow</small></summary><div class="settings-content"><p class="hint">Review confirmed activity by date and save a CSV report.</p><button data-open-reports>Balance &amp; cash flow</button></div></details>
+<details class="settings-group" name="settings-group"><summary><strong>Notifications</strong><small>Incoming and outgoing activity alerts</small></summary><div class="settings-content">        <div class="card compact-card notification-card">
           <div class="card-title"><div><p class="eyebrow">ACTIVITY ALERTS</p><h2>Transaction notifications</h2></div><span id="notification-state" class="pill">DISABLED</span></div>
           <p class="hint">Receive an alert when a new incoming BC2 transaction is detected while the installed wallet is active.</p>
           <button id="enable-notifications">Enable notifications</button>
         </div>
-        <button id="settings-remove" class="danger">Remove wallet from device</button>
-        <button id="lock">Lock Wallet</button>
+</div></details>
+<details class="settings-group" name="settings-group"><summary><strong>About GoldWallet</strong><small>Version and support</small></summary><div class="settings-content"><p>GoldWallet __GOLDWALLET_VERSION__</p><p class="hint">BitcoinII Mainnet · Non-custodial wallet</p></div></details>
+<details class="settings-group" name="settings-group"><summary><strong>Remove wallet</strong><small>Remove the encrypted wallet from this device</small></summary><div class="settings-content"><p class="hint">Your recovery phrase is required to restore access after removal.</p><button id="settings-remove" class="danger">Authenticate &amp; remove wallet</button></div></details>
         <button class="back-button" data-home>Back</button>
       </section>
     </section>

@@ -52,6 +52,8 @@ public final class NativeBridge {
     private String notificationCallback;
     private String qrCallback;
     private String pendingConnectRequest;
+    private String reportContent;
+    private String reportCallback;
 
     NativeBridge(MainActivity activity, WebView webView) {
         this.activity = activity;
@@ -191,6 +193,30 @@ public final class NativeBridge {
         pendingConnectRequest = value;
         String script = "globalThis.__bc2ConnectRequest?.(" + JSONObject.quote(value) + ")";
         activity.runOnUiThread(() -> webView.evaluateJavascript(script, null));
+    }
+
+    @JavascriptInterface public void saveReport(String filename, String content, String callbackId) {
+        activity.runOnUiThread(() -> {
+            if (reportCallback != null) { callback(callbackId, false, "Another export is already open."); return; }
+            if (filename == null || !filename.matches("GoldWallet-[0-9-]+[.]csv") || content == null || content.length() > 2_000_000 || !content.startsWith("\ufeffDate (UTC+7),")) {
+                callback(callbackId, false, "Invalid CSV report."); return;
+            }
+            reportContent = content; reportCallback = callbackId; activity.startReportSave(filename);
+        });
+    }
+
+    void finishReportSave(Uri uri) {
+        String id = reportCallback, content = reportContent;
+        reportCallback = null; reportContent = null;
+        if (id == null) return;
+        if (uri == null) { callback(id, false, "CSV export cancelled."); return; }
+        network.execute(() -> {
+            try (java.io.OutputStream stream = activity.getContentResolver().openOutputStream(uri, "wt")) {
+                if (stream == null) throw new java.io.IOException("No output stream");
+                stream.write(content.getBytes(StandardCharsets.UTF_8));
+                callback(id, true, "saved");
+            } catch (Exception error) { callback(id, false, "Unable to save CSV report."); }
+        });
     }
 
     @JavascriptInterface public void electrumRequest(String host, int port, boolean tls, String request, String callbackId) {

@@ -15,3 +15,17 @@ test('broadcasts a signed raw transaction',async()=>{const client=new ElectrumCl
 test('loads transaction details and their previous inputs',async()=>{const client=new ElectrumClient('wss://test.invalid',{expectedGenesis:expected,webSocketFactory:()=>new FakeSocket()});await client.connect();const items=await client.transactionHistory([{tx_hash:'b'.repeat(64),height:121}]);assert.equal(items[0].transaction.txid,'b'.repeat(64));assert.equal(items[0].previousTransactions['a'.repeat(64)].txid,'a'.repeat(64));client.close()});
 test('uses the native TCP/TLS bridge when selected',async()=>{const requests=[];const nativeRequest=async(host,port,tls,raw)=>{const request=JSON.parse(raw);requests.push({host,port,tls,method:request.method});const result=request.method==='server.features'?{genesis_hash:expected}:request.method==='blockchain.headers.subscribe'?{height:321}:request.method==='blockchain.scripthash.get_balance'?{confirmed:1,unconfirmed:0}:[];return JSON.stringify({jsonrpc:'2.0',id:request.id,result})};const client=new ElectrumClient('electrum+ssl://bc2-electrum.example:50002',{expectedGenesis:expected,nativeRequest});await client.connect();const snapshot=await client.walletSnapshot('0'.repeat(64));assert.equal(snapshot.height,321);assert.equal(requests[0].host,'bc2-electrum.example');assert.equal(requests[0].port,50002);assert.equal(requests.every(item=>item.tls),true)});
 test('refreshes when Electrum reports a script-hash change',async()=>{const socket=new FakeSocket(),client=new ElectrumClient('wss://test.invalid',{expectedGenesis:expected,webSocketFactory:()=>socket});await client.connect();let changed='';await client.subscribeScriptHash('0'.repeat(64),state=>{changed=state});socket.onmessage({data:JSON.stringify({jsonrpc:'2.0',method:'blockchain.scripthash.subscribe',params:['0'.repeat(64),'new-state']})});assert.equal(changed,'new-state');client.close()});
+
+test('reports load all history, cache immutable transaction details and get block timestamps',async()=>{
+  const client=new ElectrumClient('wss://test.invalid',{expectedGenesis:expected}),calls=[];
+  const header=new Uint8Array(80);new DataView(header.buffer).setUint32(68,1794478168,true);
+  client.call=async(method,params)=>{calls.push(method);if(method==='blockchain.block.header')return Buffer.from(header).toString('hex');return{txid:params[0],vin:[{coinbase:'00'}],vout:[]}};
+  const history=Array.from({length:12},(_,index)=>({tx_hash:String(index).padStart(64,'0'),height:100}));
+  let completed=0;const result=await client.reportHistory(history,{onProgress:done=>{completed=done}});
+  assert.equal(result.length,12);assert.equal(completed,12);assert.equal(result[0].timestamp,1794478168);
+  assert.equal(calls.filter(method=>method==='blockchain.block.header').length,1);
+  const loaded=calls.filter(method=>method==='blockchain.transaction.get').length;
+  await client.reportHistory(history);assert.equal(calls.filter(method=>method==='blockchain.transaction.get').length,loaded);
+  client.call=async()=>{throw new Error('offline')};
+  await assert.rejects(()=>client.reportHistory([{tx_hash:'new',height:1}]),/offline/);
+});
