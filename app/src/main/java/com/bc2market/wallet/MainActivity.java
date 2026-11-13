@@ -28,6 +28,7 @@ import java.io.IOException;
 public final class MainActivity extends Activity {
     static final int NOTIFICATION_REQUEST = 1201;
     static final int QR_IMAGE_REQUEST = 1203;
+    static final int REPORT_REQUEST = 1204;
     private WebView webView;
     private NativeBridge bridge;
 
@@ -74,6 +75,13 @@ public final class MainActivity extends Activity {
         catch (RuntimeException error) { bridge.finishQrError("Unable to open the image picker."); }
     }
 
+    void startReportSave(String filename) {
+        Intent picker = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
+            .setType("text/csv").putExtra(Intent.EXTRA_TITLE, filename);
+        try { startActivityForResult(picker, REPORT_REQUEST); }
+        catch (RuntimeException error) { bridge.finishReportSave(null); }
+    }
+
     private void decodeQrImage(Uri uri) {
         try {
             BarcodeScanner scanner = BarcodeScanning.getClient(new BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build());
@@ -92,6 +100,10 @@ public final class MainActivity extends Activity {
     }
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REPORT_REQUEST) {
+            bridge.finishReportSave(resultCode == RESULT_OK && data != null ? data.getData() : null);
+            return;
+        }
         if (requestCode == QR_IMAGE_REQUEST) {
             if (resultCode == RESULT_OK && data != null && data.getData() != null) decodeQrImage(data.getData());
             else bridge.finishQrScan(null);

@@ -29,7 +29,7 @@ export class ElectrumClient{
   close(){this.failPending('Electrum connection closed.');try{this.socket?.close()}catch{}this.socket=null}
   async walletSnapshot(scriptHash){
     const [header,balance,utxos,history]=await Promise.all([this.call('blockchain.headers.subscribe',[]),this.call('blockchain.scripthash.get_balance',[scriptHash]),this.call('blockchain.scripthash.listunspent',[scriptHash]),this.call('blockchain.scripthash.get_history',[scriptHash])]);
-    return{height:Number(header?.height||0),confirmed:Number(balance?.confirmed||0),unconfirmed:Number(balance?.unconfirmed||0),utxos:Array.isArray(utxos)?utxos:[],history:Array.isArray(history)?history:[]};
+    return{height:Number(header?.height||0),headerHex:header?.hex||null,confirmed:Number(balance?.confirmed||0),unconfirmed:Number(balance?.unconfirmed||0),utxos:Array.isArray(utxos)?utxos:[],history:Array.isArray(history)?history:[]};
   }
   subscribeScriptHash(scriptHash,onChange){if(this.native)return Promise.resolve(null);this.scriptSubscriptions.set(scriptHash,onChange);return this.call('blockchain.scripthash.subscribe',[scriptHash])}
   transaction(txid){return this.call('blockchain.transaction.get',[txid,true])}
@@ -38,4 +38,28 @@ export class ElectrumClient{
     return Promise.all(selected.map(async entry=>{try{const transaction=await load(entry.tx_hash),previousTransactions={};await Promise.all((transaction.vin||[]).filter(input=>input.txid).map(async input=>{try{previousTransactions[input.txid]=await load(input.txid)}catch{}}));return{height:Number(entry.height)||0,transaction,previousTransactions}}catch{return{height:Number(entry.height)||0,transaction:{txid:String(entry.tx_hash||'')},previousTransactions:{}}}}));
   }
   broadcast(rawTransaction){return this.call('blockchain.transaction.broadcast',[rawTransaction])}
+  async reportHistory(history,{onProgress=()=>{}}={}){
+    // Reports require every transaction; the home screen intentionally shows only eight.
+    this.reportTransactions??=new Map();
+    const headers=new Map(),load=txid=>{
+      if(!this.reportTransactions.has(txid))this.reportTransactions.set(txid,this.transaction(txid).catch(error=>{this.reportTransactions.delete(txid);throw error}));
+      return this.reportTransactions.get(txid);
+    },results=[];
+    for(const entry of history){
+      const transaction=await load(entry.tx_hash),previousTransactions={};
+      if(transaction?.txid!==entry.tx_hash||!Array.isArray(transaction.vin)||!Array.isArray(transaction.vout))throw new Error('Electrum returned incomplete transaction details.');
+      for(const input of transaction.vin){if(input.txid){const previous=await load(input.txid);if(previous?.txid!==input.txid)throw new Error('Previous transaction ID mismatch.');previousTransactions[input.txid]=previous}}
+      const height=Number(entry.height)||0;let timestamp=null;
+      if(height>0){
+        if(!headers.has(height)){
+          const hex=await this.call('blockchain.block.header',[height]);
+          if(typeof hex!=='string'||!/^[0-9a-f]{160}$/i.test(hex))throw new Error('Invalid Electrum block header.');
+          const bytes=Uint8Array.from(hex.match(/../g),byte=>parseInt(byte,16));headers.set(height,new DataView(bytes.buffer).getUint32(68,true));
+        }
+        timestamp=headers.get(height);
+      }
+      results.push({transaction,previousTransactions,height,timestamp});onProgress(results.length,history.length);
+    }
+    return results;
+  }
 }
