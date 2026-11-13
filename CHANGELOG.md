@@ -1,3 +1,9 @@
+## 0.4.10 — 2026-11-13
+
+- Use a public CoinGecko request from the device when the server price feed is unavailable or rejects requests from a data-centre network.
+- The fallback sends no wallet address, balance, seed, xpub or cookies. The same freshness validation applies to both quote paths.
+- Includes the 0.4.9 balance-layout fix, USD display and update notifications.
+
 ## 0.4.9 — 2026-11-13
 
 - Keep the balance and BC2 label on one line; fit long balances to narrow screens without duplicate tickers.

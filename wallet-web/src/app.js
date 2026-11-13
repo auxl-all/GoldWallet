@@ -6,7 +6,7 @@ import {normalizeRecipientQr,recipientAddressState,upsertBookmark} from './addre
 import {parseConnectRequest} from './connect-request.js';
 import {classifyWalletQr} from './wallet-qr.js';
 import {balanceReport,reportAmount,reportCsv,reportDate} from './wallet-reports.js';
-import {parseRelease,parseUsdQuote,usdBalance} from './wallet-services.js';
+import {parseRelease,fetchUsdQuote,usdBalance} from './wallet-services.js';
 import {newTransactionNotifications} from './transaction-notifications.js';
 
 if(nativeAvailable())globalThis.__bc2NativeElectrumRequest=(host,port,tls,request)=>nativeRequest('electrumRequest',host,port,tls,request);
@@ -150,7 +150,7 @@ async function walletJson(path){
 }
 async function loadUsdQuote(){
   if(!mnemonic)return;
-  try{usdQuote=parseUsdQuote(await walletJson('/api/wallet/price'))}catch{usdQuote=null}
+  try{usdQuote=await fetchUsdQuote()}catch{usdQuote=null}
   renderUsdBalance();
 }
 function showUpdate(){

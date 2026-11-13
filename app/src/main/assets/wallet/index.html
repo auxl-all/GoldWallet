@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07070d">
   <meta name="robots" content="noindex,nofollow">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src wss://electrum.bc2market.com https://bc2market.com; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src wss://electrum.bc2market.com https://bc2market.com https://api.coingecko.com; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
   <title>GoldWallet · BitcoinII Mainnet</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="goldwallet-icon.png">
@@ -145,7 +145,7 @@
           <button id="enable-notifications">Enable notifications</button>
         </div>
 </div></details>
-<details class="settings-group" name="settings-group"><summary><strong>About GoldWallet</strong><small>Version and support</small></summary><div class="settings-content"><p>GoldWallet 0.4.9</p><button id="check-updates">Check for updates</button><p id="update-status" class="hint" role="status">Updates are checked automatically.</p><p class="hint">BitcoinII Mainnet · Non-custodial wallet</p></div></details>
+<details class="settings-group" name="settings-group"><summary><strong>About GoldWallet</strong><small>Version and support</small></summary><div class="settings-content"><p>GoldWallet 0.4.10</p><button id="check-updates">Check for updates</button><p id="update-status" class="hint" role="status">Updates are checked automatically.</p><p class="hint">BitcoinII Mainnet · Non-custodial wallet</p></div></details>
 <details class="settings-group" name="settings-group"><summary><strong>Remove wallet</strong><small>Remove the encrypted wallet from this device</small></summary><div class="settings-content"><p class="hint">Your recovery phrase is required to restore access after removal.</p><button id="settings-remove" class="danger">Authenticate &amp; remove wallet</button></div></details>
         <button class="back-button" data-home>Back</button>
       </section>
@@ -181,7 +181,7 @@
       <button id="copy-connect-proof" class="primary">Copy proof</button><button id="connect-close">Close</button>
     </dialog>
   </main>
-  <footer>GoldWallet 0.4.9 · BitcoinII Mainnet · Non-custodial hot wallet</footer>
+  <footer>GoldWallet 0.4.10 · BitcoinII Mainnet · Non-custodial hot wallet</footer>
   <script src="qrcode.min.js" defer></script>
   <script src="app.js" defer></script>
 </body>

@@ -1,6 +1,18 @@
 export const APPLICATION_ID='com.bc2market.wallet';
 export const PRICE_MAX_AGE=30*60;
 
+export async function fetchUsdQuote({fetcher=fetch,now=Date.now()}={}){
+  async function json(url){
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
+    try{const response=await fetcher(url,{credentials:'omit',cache:'no-store',signal:controller.signal});if(!response.ok)throw new Error('USD feed unavailable.');return await response.json()}finally{clearTimeout(timer)}
+  }
+  try{return parseUsdQuote(await json('https://bc2market.com/api/wallet/price'),now)}catch{
+    // CoinGecko may reject data-centre requests while allowing public requests from devices.
+    const value=(await json('https://api.coingecko.com/api/v3/simple/price?ids=bitcoinii&vs_currencies=usd&include_last_updated_at=true'))?.bitcoinii;
+    return parseUsdQuote({currency:'USD',coinId:'bitcoinii',source:'CoinGecko',usd:value?.usd,updatedAt:value?.last_updated_at},now);
+  }
+}
+
 export function parseUsdQuote(data,now=Date.now()){
   if(data?.currency!=='USD'||data.coinId!=='bitcoinii'||data.source!=='CoinGecko'||typeof data.usd!=='number'||!Number.isFinite(data.usd)||data.usd<=0||!Number.isSafeInteger(data.updatedAt))throw new Error('USD price unavailable.');
   const age=now/1000-data.updatedAt;

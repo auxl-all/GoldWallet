@@ -7,3 +7,5 @@ To synchronize the wallet, the selected Electrum server receives the wallet's sc
 BC2 Connect sends the selected public address and a signature over a short-lived, origin-bound message to `bc2market.com`. It does not send the recovery phrase or private key.
 
 The app requests network access, notifications, biometrics, and camera/QR capabilities for their visible wallet functions. It does not require contacts, location, microphone, SMS, or advertising identifiers. No analytics SDK is intentionally included in the wallet repository.
+
+USD estimates and release checks retrieve public data from BC2 Market. If its price feed is unavailable, the app requests the public BitcoinII/USD quote directly from CoinGecko. These requests do not contain the wallet address, balance, xpub, recovery phrase or private key. The public data services can observe the requesting IP address. The installed version is compared with the release feed locally. Update download links open only after the user chooses a source.
