@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseRelease,parseUsdQuote,usdBalance,safeUpdateUrl} from '../.test-build/wallet-services.mjs';
+import {parseRelease,parseUsdQuote,usdBalance,safeUpdateUrl,fetchUsdQuote} from '../.test-build/wallet-services.mjs';
 const now=1794554004000;
 const quote={currency:'USD',coinId:'bitcoinii',source:'CoinGecko',usd:.08,updatedAt:now/1000};
 const release={applicationId:'com.bc2market.wallet',versionName:'0.4.9',versionCode:19,downloads:{bc2market:'https://bc2market.com/downloads/GoldWallet-v0.4.9-debug.apk',github:'https://github.com/auxl-all/GoldWallet/releases/tag/v0.4.9',googlePlay:null}};
@@ -13,6 +13,14 @@ test('values only synchronized confirmed balances using fresh USD quotes',()=>{
   assert.throws(()=>parseUsdQuote({...quote,updatedAt:now/1000+301},now),/out of date/);
   for(const usd of [null,0,-1,NaN,Infinity])assert.throws(()=>parseUsdQuote({...quote,usd},now),/unavailable/);
   assert.throws(()=>usdBalance(NaN,quote,now));
+});
+
+test('falls back to a public device request without sending wallet data and rejects stale fallback quotes',async()=>{
+  const calls=[],fetcher=async(url,options)=>{calls.push(url);assert.equal(options.credentials,'omit');assert.equal(options.body,undefined);return url.startsWith('https://bc2market.com')?new Response('',{status:503}):Response.json({bitcoinii:{usd:.08,last_updated_at:now/1000}})};
+  assert.equal((await fetchUsdQuote({fetcher,now})).usd,.08);assert.equal(calls.length,2);
+  assert.equal(calls[1],'https://api.coingecko.com/api/v3/simple/price?ids=bitcoinii&vs_currencies=usd&include_last_updated_at=true');
+  await assert.rejects(()=>fetchUsdQuote({now,fetcher:async()=>new Response('',{status:503})}),/unavailable/);
+  await assert.rejects(()=>fetchUsdQuote({now,fetcher:async()=>Response.json({bitcoinii:{usd:.08,last_updated_at:now/1000-1801}})}),/out of date/);
 });
 test('uses monotonically increasing version codes and supports optional Google Play',()=>{
   assert.equal(parseRelease(release,18).newer,true);
