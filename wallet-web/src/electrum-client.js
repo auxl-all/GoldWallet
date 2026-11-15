@@ -31,14 +31,14 @@ export class ElectrumClient{
     const [header,balance,utxos,history]=await Promise.all([this.call('blockchain.headers.subscribe',[]),this.call('blockchain.scripthash.get_balance',[scriptHash]),this.call('blockchain.scripthash.listunspent',[scriptHash]),this.call('blockchain.scripthash.get_history',[scriptHash])]);
     return{height:Number(header?.height||0),headerHex:header?.hex||null,confirmed:Number(balance?.confirmed||0),unconfirmed:Number(balance?.unconfirmed||0),utxos:Array.isArray(utxos)?utxos:[],history:Array.isArray(history)?history:[]};
   }
-  subscribeScriptHash(scriptHash,onChange){if(this.native)return Promise.resolve(null);this.scriptSubscriptions.set(scriptHash,onChange);return this.call('blockchain.scripthash.subscribe',[scriptHash])}
+  subscribeScriptHash(scriptHash,onChange){if(this.native)return Promise.resolve(null);if(this.scriptSubscriptions.has(scriptHash)){this.scriptSubscriptions.set(scriptHash,onChange);return Promise.resolve(null)}this.scriptSubscriptions.set(scriptHash,onChange);return this.call('blockchain.scripthash.subscribe',[scriptHash])}
   transaction(txid){return this.call('blockchain.transaction.get',[txid,true])}
   async transactionHistory(history){
     const selected=(Array.isArray(history)?history:[]).slice(-8).reverse(),cache=new Map(),load=txid=>{if(!cache.has(txid))cache.set(txid,this.transaction(txid));return cache.get(txid)};
     return Promise.all(selected.map(async entry=>{try{const transaction=await load(entry.tx_hash),previousTransactions={};await Promise.all((transaction.vin||[]).filter(input=>input.txid).map(async input=>{try{previousTransactions[input.txid]=await load(input.txid)}catch{}}));return{height:Number(entry.height)||0,transaction,previousTransactions}}catch{return{height:Number(entry.height)||0,transaction:{txid:String(entry.tx_hash||'')},previousTransactions:{}}}}));
   }
   broadcast(rawTransaction){return this.call('blockchain.transaction.broadcast',[rawTransaction])}
-  async reportHistory(history,{onProgress=()=>{}}={}){
+  async reportHistory(history,{onProgress=()=>{},signal}={}){
     // Reports require every transaction; the home screen intentionally shows only eight.
     this.reportTransactions??=new Map();
     const headers=new Map(),load=txid=>{
@@ -46,6 +46,7 @@ export class ElectrumClient{
       return this.reportTransactions.get(txid);
     },results=[];
     for(const entry of history){
+      if(signal?.aborted)throw new Error('Report cancelled.');
       const transaction=await load(entry.tx_hash),previousTransactions={};
       if(transaction?.txid!==entry.tx_hash||!Array.isArray(transaction.vin)||!Array.isArray(transaction.vout))throw new Error('Electrum returned incomplete transaction details.');
       for(const input of transaction.vin){if(input.txid){const previous=await load(input.txid);if(previous?.txid!==input.txid)throw new Error('Previous transaction ID mismatch.');previousTransactions[input.txid]=previous}}

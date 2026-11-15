@@ -23,11 +23,26 @@ const p2wpkhScript=hash=>concat(Uint8Array.of(0x00,0x14),hash);
 
 export function createMnemonic(){return generateMnemonic(wordlist,128)}
 export function validateMnemonic(value){return isMnemonic(String(value).trim().toLowerCase(),wordlist)}
-export function deriveWallet(mnemonic){
+function privateAccount(mnemonic){
   const normalized=String(mnemonic).trim().toLowerCase();if(!validateMnemonic(normalized))throw new Error('Invalid BIP39 recovery phrase.');
-  const node=HDKey.fromMasterSeed(mnemonicToSeedSync(normalized)).derive(MAINNET.path);if(!node.privateKey)throw new Error('Private key derivation failed.');
+  return HDKey.fromMasterSeed(mnemonicToSeedSync(normalized)).derive("m/84'/0'/0'");
+}
+function addressNode(account,branch,index){
+  if(![0,1].includes(branch)||!Number.isInteger(index)||index<0||index>=2000)throw new Error('Invalid wallet address path.');
+  return account.deriveChild(branch).deriveChild(index);
+}
+function describeNode(node,branch,index){
   const publicKey=Uint8Array.from(node.publicKey),publicKeyHash=ripemd160(sha256(publicKey)),script=p2wpkhScript(publicKeyHash),address=bech32.encode(MAINNET.bech32,[0,...bech32.toWords(publicKeyHash)]);
-  return{address,privateKey:Uint8Array.from(node.privateKey),publicKey,publicKeyHash,scriptHash:bytesToHex(sha256(script).reverse())};
+  return{address,publicKey,publicKeyHash,scriptHash:bytesToHex(sha256(script).reverse()),scriptHex:bytesToHex(script),branch,index};
+}
+export function derivePublicAccount(mnemonic){return HDKey.fromExtendedKey(privateAccount(mnemonic).publicExtendedKey)}
+export function deriveAddress(account,branch=0,index=0){return describeNode(addressNode(account,branch,index),branch,index)}
+export function exportAccountZpub(mnemonic){
+  const payload=base58check.decode(privateAccount(mnemonic).publicExtendedKey);
+  return base58check.encode(concat(Uint8Array.of(0x04,0xb2,0x47,0x46),payload.slice(4)));
+}
+export function deriveWallet(mnemonic,{branch=0,index=0}={}){
+  const node=addressNode(privateAccount(mnemonic),branch,index);return{...describeNode(node,branch,index),privateKey:Uint8Array.from(node.privateKey)};
 }
 export function parseBc2Amount(value){
   const text=String(value).trim();if(!/^(?:0|[1-9]\d*)(?:\.\d{1,8})?$/.test(text))throw new Error('Enter a valid BC2 amount with up to 8 decimals.');
@@ -40,12 +55,12 @@ export function addressScript(address){
   if(payload.length!==21||payload[0]!==MAINNET.pubKeyHash)throw new Error('Recipient must be a BitcoinII Mainnet P2PKH or bc1q address.');
   return p2pkhScript(payload.slice(1));
 }
-export function summarizeWalletTransaction({transaction,previousTransactions={},walletScriptHex,height=0,chainHeight=0}){
-  const vin=Array.isArray(transaction?.vin)?transaction.vin:[],vout=Array.isArray(transaction?.vout)?transaction.vout:[],script=String(walletScriptHex).toLowerCase(),sats=value=>Math.round(Number(value||0)*1e8);
+export function summarizeWalletTransaction({transaction,previousTransactions={},walletScriptHex,walletScriptHexes=[],height=0,chainHeight=0}){
+  const vin=Array.isArray(transaction?.vin)?transaction.vin:[],vout=Array.isArray(transaction?.vout)?transaction.vout:[],scripts=new Set(walletScriptHexes.length?walletScriptHexes.map(value=>value.toLowerCase()):[String(walletScriptHex).toLowerCase()]),sats=value=>Math.round(Number(value||0)*1e8);
   const previousOutputs=vin.map(input=>input.coinbase?null:previousTransactions[input.txid]?.vout?.[Number(input.vout)]),complete=vin.every((input,index)=>input.coinbase||previousOutputs[index]);
-  const ownOutput=vout.filter(output=>String(output.scriptPubKey?.hex||'').toLowerCase()===script).reduce((sum,output)=>sum+sats(output.value),0),confirmations=Number(height)>0?Math.max(0,Number(chainHeight)-Number(height)+1):0;
+  const ownOutput=vout.filter(output=>scripts.has(String(output.scriptPubKey?.hex||'').toLowerCase())).reduce((sum,output)=>sum+sats(output.value),0),confirmations=Number(height)>0?Math.max(0,Number(chainHeight)-Number(height)+1):0;
   if(!complete)return{txid:String(transaction?.txid||''),direction:'unknown',amount:0,fee:null,height:Number(height)||0,confirmations};
-  const totalInput=previousOutputs.reduce((sum,output)=>sum+(output?sats(output.value):0),0),ownInput=previousOutputs.filter(output=>String(output?.scriptPubKey?.hex||'').toLowerCase()===script).reduce((sum,output)=>sum+sats(output.value),0),totalOutput=vout.reduce((sum,output)=>sum+sats(output.value),0),fee=vin.some(input=>input.coinbase)?0:Math.max(0,totalInput-totalOutput);
+  const totalInput=previousOutputs.reduce((sum,output)=>sum+(output?sats(output.value):0),0),ownInput=previousOutputs.filter(output=>scripts.has(String(output?.scriptPubKey?.hex||'').toLowerCase())).reduce((sum,output)=>sum+sats(output.value),0),totalOutput=vout.reduce((sum,output)=>sum+sats(output.value),0),fee=vin.some(input=>input.coinbase)?0:Math.max(0,totalInput-totalOutput);
   return ownInput>0?{txid:String(transaction?.txid||''),direction:'sent',amount:Math.max(0,ownInput-ownOutput-fee),fee,height:Number(height)||0,confirmations}:{txid:String(transaction?.txid||''),direction:'received',amount:ownOutput,fee:0,height:Number(height)||0,confirmations};
 }
 const estimatedFee=(inputs,outputs)=>Math.max(MIN_FEE_SATS,11+68*inputs+31*outputs);
@@ -63,10 +78,16 @@ export function replayProtectedWitnessDigest({inputs,outputs,inputIndex,scriptCo
   const hashPrevouts=hash256(concat(...inputs.map(outpoint))),hashSequence=hash256(concat(...inputs.map(()=>u32(0xffffffff)))),hashOutputs=hash256(concat(...encodedOutputs(outputs))),preimage=concat(u32(2),hashPrevouts,hashSequence,outpoint(inputs[inputIndex]),compactSize(scriptCode.length),scriptCode,u64(amount),u32(0xffffffff),hashOutputs,u32(0),u32(1),u32(forkId));
   return hash256(preimage);
 }
-export function buildSignedTransaction({mnemonic,recipient,amount,utxos}){
-  const wallet=deriveWallet(mnemonic),recipientScript=addressScript(recipient),changeScript=p2wpkhScript(wallet.publicKeyHash),plan=createTransactionPlan(amount,utxos),outputs=[{value:plan.amount,script:recipientScript}];if(plan.change)outputs.push({value:plan.change,script:changeScript});
-  const scriptCode=p2pkhScript(wallet.publicKeyHash),witnesses=plan.inputs.map((input,inputIndex)=>{const digest=replayProtectedWitnessDigest({inputs:plan.inputs,outputs,inputIndex,scriptCode,amount:Number(input.value)}),der=secp256k1.sign(digest,wallet.privateKey,{prehash:false,lowS:true,format:'der'});return[concat(der,Uint8Array.of(1)),wallet.publicKey]}),raw=serializeWitnessTransaction(plan.inputs,outputs,witnesses),txid=bytesToHex(reverse(hash256(serializeBaseTransaction(plan.inputs,outputs))));
-  return{...plan,rawTransaction:bytesToHex(raw),txid,replayProtectionForkId:MAINNET.replayProtectionForkId};
+export function buildSignedTransaction({mnemonic,recipient,amount,utxos,changeIndex}){
+  const account=privateAccount(mnemonic),legacy=describeNode(addressNode(account,0,0),0,0),change=changeIndex===undefined?legacy:describeNode(addressNode(account,1,changeIndex),1,changeIndex);
+  const recipientScript=addressScript(recipient),plan=createTransactionPlan(amount,utxos),outputs=[{value:plan.amount,script:recipientScript}];if(plan.change)outputs.push({value:plan.change,script:p2wpkhScript(change.publicKeyHash)});
+  const witnesses=plan.inputs.map((input,inputIndex)=>{
+    const branch=input.branch??0,index=input.index??0,node=addressNode(account,branch,index),wallet=describeNode(node,branch,index);
+    if((input.address&&input.address!==wallet.address)||(input.scriptHash&&input.scriptHash!==wallet.scriptHash))throw new Error('Input does not match this wallet address path.');
+    const scriptCode=p2pkhScript(wallet.publicKeyHash),digest=replayProtectedWitnessDigest({inputs:plan.inputs,outputs,inputIndex,scriptCode,amount:Number(input.value)}),der=secp256k1.sign(digest,node.privateKey,{prehash:false,lowS:true,format:'der'});
+    return[concat(der,Uint8Array.of(1)),wallet.publicKey];
+  }),raw=serializeWitnessTransaction(plan.inputs,outputs,witnesses),txid=bytesToHex(reverse(hash256(serializeBaseTransaction(plan.inputs,outputs))));
+  return{...plan,changeAddress:change.address,changeIndex,rawTransaction:bytesToHex(raw),txid,replayProtectionForkId:MAINNET.replayProtectionForkId};
 }
 export async function encryptMnemonic(mnemonic,password){
   if(String(password).length<12)throw new Error('Password must contain at least 12 characters.');

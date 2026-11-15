@@ -640,3 +640,16 @@ footer {
 #balance-price-note { max-width: 100%; text-align: center; font-size: .68rem; }
 #wallet-update-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 #wallet-update-banner button { width: auto; margin: 0; padding: 9px 13px; }
+
+.wallet-switch-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.wallet-switch-bar > button { width: auto; min-width: 0; padding: 8px 0; border: 0; background: none; text-align: left; }
+.wallet-switch-bar strong { display: block; max-width: 230px; overflow-wrap: anywhere; color: #fff; }
+.wallet-switch-bar small { display: block; color: var(--gold); font-size: .72rem; margin-top: 4px; }
+.wallet-switch-bar > span { color: var(--gold); font-size: .75rem; letter-spacing: .12em; }
+.wallet-name-field { display: grid; gap: 8px; margin: 16px 0; }
+.wallet-name-field input, #zpub-value { width: 100%; padding: 13px; border: 1px solid var(--line); border-radius: 10px; background: #08080c; color: #fff; font: inherit; }
+.wallet-list { display: grid; gap: 10px; max-height: 45vh; overflow-y: auto; }
+.wallet-list button { text-align: left; overflow-wrap: anywhere; }
+.wallet-list small { display: block; color: #b8afa4; font-size: .75rem; margin-top: 5px; }
+#zpub-value { font: .8rem/1.5 ui-monospace,monospace; overflow-wrap: anywhere; resize: none; }
+#wallet-sync-note { font-size: .68rem; max-width: 100%; text-align: center; }

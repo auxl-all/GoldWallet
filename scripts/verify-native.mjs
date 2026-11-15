@@ -37,7 +37,7 @@ assert.match(bridge,/scanQrImage/);
 assert.match(bridge,/openExternal/);
 assert.match(bridge,/"bc2market\.com"\.equals\(uri\.getHost\(\)\)/);
 assert.match(bridge,/consumeConnectRequest/);
-assert.match(bridge,/configureBackgroundMonitor/);
+assert.match(bridge,/configureBackgroundWallet/);
 assert.match(bridge,/disableBackgroundMonitor/);
 assert.match(worker,/PeriodicWorkRequest\.Builder/);
 assert.match(worker,/15, TimeUnit\.MINUTES/);
@@ -47,7 +47,7 @@ assert.match(worker,/0000000028f062b221c1a8a5cf0244b1627315f7aa5b775b931cfec46dc
 assert.match(worker,/blockchain\.scripthash\.get_history/);
 assert.match(worker,/blockchain\.scripthash\.get_balance/);
 assert.match(wallet,/0000000028f062b221c1a8a5cf0244b1627315f7aa5b775b931cfec46dc17ceb/);
-assert.match(wallet,/configureBackgroundMonitor/);
+assert.match(wallet,/configureBackgroundWallet/);
 assert.match(wallet,/disableBackgroundMonitor/);
 assert.match(html,/GoldWallet/);
 assert.match(wallet,/BC2 Market login/);
@@ -63,3 +63,7 @@ assert.match(html,/id="admin-announcement"[^>]*hidden/);
 assert.ok(html.indexOf('class="wallet-actions"') < html.indexOf('id="status"'));
 assert.doesNotMatch(html,/BitcoinII Mainnet hot wallet/);
 console.log('BC2 native security checks passed');
+
+assert.match(bridge,/walletSecurityPrefs/);
+assert.match(bridge,/savePublicWallet/);
+assert.match(worker,/KEY_TOKEN/);

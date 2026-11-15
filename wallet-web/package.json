@@ -1,6 +1,6 @@
 {
   "name": "bc2-wallet-mobile-mainnet",
-  "version": "0.4.10",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,5 +17,5 @@
   "devDependencies": {
     "esbuild": "^0.25.0"
   },
-  "versionCode": 20
+  "versionCode": 21
 }

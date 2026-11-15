@@ -32,15 +32,15 @@
       <div class="setup-points"><span>✓ Keys stay on device</span><span>✓ 12-word backup</span><span>✓ Mainnet verified</span></div>
       <div id="setup-create-pane"><h2>Create a fresh wallet</h2><p class="hint">A new recovery phrase will be generated after your password is confirmed.</p></div>
       <div id="setup-restore-pane" hidden><h2>Restore with 12 words</h2><label>Recovery phrase <small id="restore-count">0 / 12 words</small><textarea id="restore-phrase" rows="4" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Enter the words in the correct order"></textarea></label></div>
-      <div class="setup-passwords"><label>Password <small>12 characters minimum</small><input id="setup-password" type="password" autocomplete="new-password" minlength="12" placeholder="Create a strong password"></label><label>Confirm password<input id="setup-confirm" type="password" autocomplete="new-password" minlength="12" placeholder="Enter it again"></label></div>
+      <label class="wallet-name-field">Wallet name<input id="wallet-label" maxlength="40" autocomplete="off" placeholder="e.g. Personal wallet"></label><div class="setup-passwords"><label>Password <small>12 characters minimum</small><input id="setup-password" type="password" autocomplete="new-password" minlength="12" placeholder="Create a strong password"></label><label>Confirm password<input id="setup-confirm" type="password" autocomplete="new-password" minlength="12" placeholder="Enter it again"></label></div>
       <button id="create" class="primary setup-submit">Create Mainnet wallet</button>
       <button id="restore" class="primary setup-submit" hidden>Restore Mainnet wallet</button>
-      <p class="auth-footnote">BC2 Market cannot recover your password or recovery phrase.</p>
+      <button id="cancel-add-wallet" hidden>Back to stored wallets</button><p class="auth-footnote">Each wallet has its own recovery phrase and password. BC2 Market cannot recover them.</p>
     </section>
     <section id="unlock" data-view hidden class="card auth-card">
       <div class="auth-mark" aria-hidden="true"><span>⌾</span></div>
       <p class="eyebrow">WELCOME BACK</p><h1>Unlock your wallet</h1>
-      <p class="auth-copy">Your encrypted wallet stays on this device. Authenticate to continue.</p>
+      <p id="unlock-wallet-name" class="auth-copy"></p><button id="unlock-wallets">Choose another wallet / add wallet</button><p class="auth-copy">Authenticate to unlock the selected wallet.</p>
       <label class="password-label" for="unlock-password">Wallet password</label>
       <div class="password-control"><input id="unlock-password" type="password" autocomplete="current-password" placeholder="Enter your password"><button id="toggle-password" type="button" aria-label="Show password">Show</button></div>
       <button id="unlock-wallet" class="primary auth-primary">Unlock wallet</button>
@@ -51,8 +51,8 @@
     <section id="wallet" data-view hidden>
       <div id="backup" hidden class="card backup"><p class="eyebrow">RECOVERY PHRASE</p><h2>Write it down now</h2><code id="backup-phrase"></code><p>Anyone with these words controls your Mainnet BC2. Store them offline.</p></div>
       <section id="wallet-home" data-wallet-panel>
-        <p class="wallet-name">WALLET 1 <span>MAINNET</span></p>
-        <div class="balance-card"><span>BALANCE</span><div class="balance-line"><strong id="balance">—</strong><b>BC2</b></div><div id="balance-usd" class="balance-usd" aria-live="polite">USD value unavailable</div><small id="balance-price-note">Estimated market value</small><small id="pending-balance">Not synchronized</small></div>
+        <div class="wallet-switch-bar"><button id="open-wallets"><strong id="active-wallet-name">Wallet 1</strong><small>Switch / add wallet ▾</small></button><span>MAINNET</span></div>
+        <div class="balance-card"><span>BALANCE</span><div class="balance-line"><strong id="balance">—</strong><b>BC2</b></div><div id="balance-usd" class="balance-usd" aria-live="polite">USD value unavailable</div><small id="balance-price-note">Estimated market value</small><small id="pending-balance">Not synchronized</small><small id="wallet-sync-note" role="status" aria-live="polite"></small></div>
         <div class="wallet-actions"><button id="open-send" class="primary">Send</button><button id="open-receive">Receive</button></div>
         <p id="status" class="status" aria-live="polite" hidden></p>
         <button class="explorer-shortcut" data-open-reports><span>Balance &amp; cash flow</span><b aria-hidden="true">↗</b></button>
@@ -88,12 +88,12 @@
         <p class="eyebrow">MAINNET</p><h1>RECEIVE BC2</h1>
         <div id="receive-qr" class="qr" aria-label="QR code for the receive address"></div>
         <button id="copy-receive-address" class="address-card"><code id="receive-address"></code><small>Tap to copy</small></button>
-        <p class="hint">This address is for native BitcoinII Mainnet BC2 only. Do not send BTC, xBC2 or tokens from another network.</p>
+        <p id="receive-path" class="hint"></p><button id="new-receive-address">Create new receiving address</button><p class="hint">Previous addresses remain valid and are included in the wallet balance.</p><p class="hint">This address is for native BitcoinII Mainnet BC2 only. Do not send BTC, xBC2 or tokens from another network.</p>
         <button class="back-button" data-home>Back</button>
       </section>
       <section id="wallet-reports" data-wallet-panel hidden class="wallet-screen">
         <p class="eyebrow">WALLET REPORTS · UTC+7</p><h1>Balance &amp; cash flow</h1>
-        <p class="hint">Reports cover this GoldWallet address. Change back to the wallet is excluded from received and sent totals. Fees are shown separately.</p>
+        <p class="hint">Reports cover all discovered receiving and change addresses in the selected wallet. Change back to the wallet is excluded from received and sent totals. Fees are shown separately.</p>
         <div class="card compact-card report-controls">
           <label>Period<select id="report-period"><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="45" selected>Last 45 days</option><option value="90">Last 90 days</option><option value="custom">Custom dates</option></select></label>
           <div class="report-date-fields"><label>From<input id="report-start" type="date"></label><label>Through<input id="report-end" type="date"></label></div>
@@ -114,8 +114,8 @@
         <button class="back-button" data-home>Back</button>
       </section>
       <section id="wallet-settings" data-wallet-panel hidden class="wallet-screen">
-        <p class="eyebrow">WALLET 1</p><h1>SETTINGS</h1>
-<details class="settings-group" name="settings-group"><summary><strong>Wallet & backup</strong><small>Recovery phrase and wallet information</small></summary><div class="settings-content">        <div class="card compact-card recovery-card">
+        <p id="settings-wallet-name" class="eyebrow"></p><h1>SETTINGS</h1>
+<details class="settings-group" name="settings-group"><summary><strong>Wallet & backup</strong><small>Recovery phrase and wallet information</small></summary><div class="settings-content"><button id="settings-wallets">Manage wallets</button><label>Recovery scan gap<select id="wallet-gap"><option value="20">20 unused addresses / branch</option><option value="50">50 unused addresses / branch</option><option value="100">100 unused addresses / branch</option></select></label><p class="hint">Increase this when restoring a wallet with large unused-address gaps. Every old receiving and change address within the scan is included.</p>        <div class="card compact-card recovery-card">
           <p class="eyebrow">WALLET BACKUP</p><h2>Recovery phrase</h2>
           <p class="hint">Authentication is required every time. The phrase will hide automatically after 60 seconds.</p>
           <button id="show-recovery">Authenticate &amp; reveal 12 words</button>
@@ -128,20 +128,20 @@
           <button id="enable-biometric" class="primary">Enable biometric unlock</button>
           <button id="disable-biometric" class="danger" hidden>Disable biometric unlock</button>
         </div>
-<button id="lock">Lock Wallet</button></div></details>
+<button id="show-zpub">Authenticate &amp; export zpub</button><p class="hint">A zpub can track every address in this account but cannot spend coins. Share it only with services you trust.</p><button id="lock">Lock Wallet</button></div></details>
 <details class="settings-group" name="settings-group"><summary><strong>Network & connection</strong><small>Electrum endpoint and sync status</small></summary><div class="settings-content">        <div class="card compact-card"><div class="row"><span>Network</span><strong id="network"></strong></div><div class="row"><span>Chain ID</span><code id="chain-id"></code></div></div>
         <div class="card compact-card">
           <div class="card-title"><div><p class="eyebrow">BLOCKCHAIN SYNC</p><h2>Electrum</h2></div><span id="electrum-state" class="pill">DISCONNECTED</span></div>
           <label id="electrum-transport-wrap" hidden>Connection type<select id="electrum-transport"><option value="wss">WebSocket Secure (WSS)</option><option value="tcp">Native TCP with TLS</option></select></label>
           <label>Secure Mainnet endpoint<input id="electrum-url" inputmode="url" autocomplete="off" spellcheck="false"></label>
           <button id="sync-electrum" class="primary">Connect &amp; Synchronize</button>
-          <div class="metrics"><div><span>Block height</span><strong id="block-height">—</strong></div><div><span>Spendable UTXOs</span><strong id="utxo-count">—</strong></div></div>
+          <div class="metrics"><div><span>Block height</span><strong id="block-height">—</strong></div><div><span>Confirmed UTXOs</span><strong id="utxo-count">—</strong></div></div>
         </div>
 </div></details>
 <details class="settings-group" name="settings-group"><summary><strong>Reports & data</strong><small>Daily balances and cash flow</small></summary><div class="settings-content"><p class="hint">Review confirmed activity by date and save a CSV report.</p><button data-open-reports>Balance &amp; cash flow</button></div></details>
 <details class="settings-group" name="settings-group"><summary><strong>Notifications</strong><small>Incoming and outgoing activity alerts</small></summary><div class="settings-content">        <div class="card compact-card notification-card">
           <div class="card-title"><div><p class="eyebrow">ACTIVITY ALERTS</p><h2>Transaction notifications</h2></div><span id="notification-state" class="pill">DISABLED</span></div>
-          <p class="hint">Receive an alert when a new incoming BC2 transaction is detected while the installed wallet is active.</p>
+          <p id="notification-detail" class="hint">Notifications cover the selected wallet. Background checks use its selected WSS server; native TCP/TLS checks run while the app is open.</p>
           <button id="enable-notifications">Enable notifications</button>
         </div>
 </div></details>
@@ -150,6 +150,16 @@
         <button class="back-button" data-home>Back</button>
       </section>
     </section>
+    <dialog id="wallets-dialog" class="security-dialog">
+      <p class="eyebrow">WALLETS ON THIS DEVICE</p><h2>Your wallets</h2><div id="wallet-list" class="wallet-list"></div>
+      <p class="hint">Each wallet has its own password and recovery phrase. Selecting another wallet locks the current wallet.</p>
+      <button id="add-wallet" class="primary">Create / restore another wallet</button><button id="close-wallets">Close</button>
+    </dialog>
+    <dialog id="zpub-dialog" class="security-dialog">
+      <p class="eyebrow">PUBLIC ACCOUNT KEY</p><h2 id="zpub-wallet-name">Export zpub</h2><p class="hint">BIP84 account m/84'/0'/0'. Receiving /0/* and change /1/*. This key reveals account activity but cannot spend funds.</p>
+      <textarea id="zpub-value" rows="5" readonly spellcheck="false" aria-label="Account zpub"></textarea>
+      <button id="copy-zpub" class="primary">Copy zpub</button><button id="save-zpub">Save public key JSON</button><button id="close-zpub">Close</button>
+    </dialog>
     <dialog id="update-dialog" class="security-dialog">
       <p class="eyebrow">GOLDWALLET UPDATE</p><h2 id="update-title">New version available</h2>
       <p id="update-notes" class="hint"></p><p class="hint">Download the new version from an official source below, then follow Android's installation prompts.</p>

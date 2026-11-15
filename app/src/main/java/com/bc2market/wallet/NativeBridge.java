@@ -20,6 +20,7 @@ import android.util.Base64;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import org.json.JSONObject;
+import org.json.JSONArray;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
@@ -64,6 +65,16 @@ public final class NativeBridge {
         BackgroundMonitorWorker.schedule(activity);
     }
 
+    private volatile String selectedWalletId = "legacy";
+    private SharedPreferences walletSecurityPrefs() {
+        return "legacy".equals(selectedWalletId) ? prefs : activity.getSharedPreferences(PREFS + "_" + selectedWalletId, Context.MODE_PRIVATE);
+    }
+    @JavascriptInterface public void selectWallet(String id) {
+        if (id == null || !id.matches("[A-Za-z0-9_-]{1,80}")) return;
+        if (!id.equals(selectedWalletId)) BackgroundMonitorWorker.disable(activity);
+        selectedWalletId = id;
+    }
+
     @JavascriptInterface public boolean biometricAvailable() {
         FingerprintManager fingerprints = activity.getSystemService(FingerprintManager.class);
         KeyguardManager lock = activity.getSystemService(KeyguardManager.class);
@@ -71,13 +82,15 @@ public final class NativeBridge {
     }
 
     @JavascriptInterface public boolean biometricEnabled() {
-        String alias = prefs.getString(KEY_ALIAS, null);
-        if (alias == null || !prefs.contains(CIPHERTEXT) || !prefs.contains(IV)) return false;
+        final SharedPreferences walletPrefs = walletSecurityPrefs();
+        String alias = walletPrefs.getString(KEY_ALIAS, null);
+        if (alias == null || !walletPrefs.contains(CIPHERTEXT) || !walletPrefs.contains(IV)) return false;
         try { KeyStore store = KeyStore.getInstance("AndroidKeyStore"); store.load(null); return store.containsAlias(alias); }
         catch (Exception error) { return false; }
     }
 
     @JavascriptInterface public void enableBiometric(String mnemonic, String callbackId) {
+        final SharedPreferences walletPrefs = walletSecurityPrefs();
         activity.runOnUiThread(() -> {
             try {
                 if (!biometricAvailable()) throw new IllegalStateException("Enroll a fingerprint in Android settings first.");
@@ -95,8 +108,8 @@ public final class NativeBridge {
                 authenticate(cipher, callbackId, result -> {
                     try {
                         byte[] encrypted = result.getCryptoObject().getCipher().doFinal(mnemonic.getBytes(StandardCharsets.UTF_8));
-                        String oldAlias = prefs.getString(KEY_ALIAS, null);
-                        prefs.edit().putString(KEY_ALIAS, alias).putString(CIPHERTEXT, Base64.encodeToString(encrypted, Base64.NO_WRAP)).putString(IV, Base64.encodeToString(cipher.getIV(), Base64.NO_WRAP)).apply();
+                        String oldAlias = walletPrefs.getString(KEY_ALIAS, null);
+                        walletPrefs.edit().putString(KEY_ALIAS, alias).putString(CIPHERTEXT, Base64.encodeToString(encrypted, Base64.NO_WRAP)).putString(IV, Base64.encodeToString(cipher.getIV(), Base64.NO_WRAP)).apply();
                         if (oldAlias != null && !oldAlias.equals(alias)) deleteKey(oldAlias);
                         callback(callbackId, true, "enabled");
                     } catch (Exception error) { deleteKey(alias); callback(callbackId, false, error.getMessage()); }
@@ -106,17 +119,19 @@ public final class NativeBridge {
     }
 
     @JavascriptInterface public void unlockBiometric(String callbackId) {
+        final SharedPreferences walletPrefs = walletSecurityPrefs();
         activity.runOnUiThread(() -> {
             try {
-                String alias = prefs.getString(KEY_ALIAS, null);
+                String alias = walletPrefs.getString(KEY_ALIAS, null);
                 if (alias == null) throw new IllegalStateException("Biometric unlock is not enabled.");
                 KeyStore store = KeyStore.getInstance("AndroidKeyStore"); store.load(null);
                 SecretKey key = (SecretKey) store.getKey(alias, null);
                 Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-                cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(128, Base64.decode(prefs.getString(IV, ""), Base64.NO_WRAP)));
+                cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(128, Base64.decode(walletPrefs.getString(IV, ""), Base64.NO_WRAP)));
+                final String encrypted = walletPrefs.getString(CIPHERTEXT, "");
                 authenticate(cipher, callbackId, result -> {
                     try {
-                        byte[] plain = result.getCryptoObject().getCipher().doFinal(Base64.decode(prefs.getString(CIPHERTEXT, ""), Base64.NO_WRAP));
+                        byte[] plain = result.getCryptoObject().getCipher().doFinal(Base64.decode(encrypted, Base64.NO_WRAP));
                         callback(callbackId, true, new String(plain, StandardCharsets.UTF_8));
                     } catch (Exception error) { callback(callbackId, false, "Unable to decrypt the biometric vault."); }
                 });
@@ -125,9 +140,10 @@ public final class NativeBridge {
     }
 
     @JavascriptInterface public void disableBiometric() {
-        String alias = prefs.getString(KEY_ALIAS, null);
+        final SharedPreferences walletPrefs = walletSecurityPrefs();
+        String alias = walletPrefs.getString(KEY_ALIAS, null);
         if (alias != null) deleteKey(alias);
-        prefs.edit().remove(KEY_ALIAS).remove(CIPHERTEXT).remove(IV).apply();
+        walletPrefs.edit().remove(KEY_ALIAS).remove(CIPHERTEXT).remove(IV).apply();
     }
 
     @JavascriptInterface public boolean notificationsEnabled() {
@@ -159,16 +175,23 @@ public final class NativeBridge {
         activity.getSystemService(NotificationManager.class).notify((int) System.currentTimeMillis(), notification);
     }
 
-    @JavascriptInterface public void configureBackgroundMonitor(String scriptHash, String balance, String txid) {
-        if (scriptHash == null || !scriptHash.matches("[0-9a-fA-F]{64}")) return;
-        if (txid == null || (!txid.isEmpty() && !txid.matches("[0-9a-fA-F]{64}"))) return;
+    @JavascriptInterface public void configureBackgroundWallet(String id, String label, String hashesJson, String balance, String activityHash, String endpoint) {
         try {
+            if (!selectedWalletId.equals(id) || label == null || label.length() > 40 || activityHash == null || !activityHash.matches("([0-9a-f]{64})?")) return;
+            Uri uri = Uri.parse(endpoint);
+            if (!"wss".equals(uri.getScheme()) || uri.getHost() == null || uri.getUserInfo() != null) { BackgroundMonitorWorker.disable(activity); return; }
+            JSONArray hashes = new JSONArray(hashesJson);
+            if (hashes.length() < 1 || hashes.length() > 4000) return;
+            java.util.HashSet<String> unique = new java.util.HashSet<>();
+            for (int i=0;i<hashes.length();i++) if (!hashes.getString(i).matches("[0-9a-f]{64}") || !unique.add(hashes.getString(i))) return;
             long sats = Long.parseLong(balance);
-            prefs.edit().putString(BackgroundMonitorWorker.KEY_SCRIPT_HASH, scriptHash.toLowerCase())
-                .putLong(BackgroundMonitorWorker.KEY_BALANCE, sats)
-                .putString(BackgroundMonitorWorker.KEY_TXID, txid.toLowerCase()).apply();
+            String token = prefs.getString(BackgroundMonitorWorker.KEY_TOKEN, "");
+            if (!hashesJson.equals(prefs.getString(BackgroundMonitorWorker.KEY_HASHES, "")) || !endpoint.equals(prefs.getString(BackgroundMonitorWorker.KEY_ENDPOINT, "")) || !id.equals(prefs.getString(BackgroundMonitorWorker.KEY_WALLET, ""))) token = java.util.UUID.randomUUID().toString();
+            prefs.edit().putString(BackgroundMonitorWorker.KEY_HASHES, hashesJson).putString(BackgroundMonitorWorker.KEY_ENDPOINT, endpoint)
+                .putString(BackgroundMonitorWorker.KEY_WALLET, id).putString(BackgroundMonitorWorker.KEY_LABEL, label).putString(BackgroundMonitorWorker.KEY_TOKEN, token)
+                .putLong(BackgroundMonitorWorker.KEY_BALANCE, sats).putString(BackgroundMonitorWorker.KEY_TXID, activityHash).apply();
             BackgroundMonitorWorker.schedule(activity);
-        } catch (NumberFormatException ignored) {}
+        } catch (Exception ignored) {}
     }
 
     @JavascriptInterface public void disableBackgroundMonitor() { BackgroundMonitorWorker.disable(activity); }
@@ -212,10 +235,23 @@ public final class NativeBridge {
     @JavascriptInterface public void saveReport(String filename, String content, String callbackId) {
         activity.runOnUiThread(() -> {
             if (reportCallback != null) { callback(callbackId, false, "Another export is already open."); return; }
-            if (filename == null || !filename.matches("GoldWallet-[0-9-]+[.]csv") || content == null || content.length() > 2_000_000 || !content.startsWith("\ufeffDate (UTC+7),")) {
+            if (filename == null || !filename.matches("GoldWallet-[A-Za-z0-9_-]+[.]csv") || content == null || content.length() > 2_000_000 || !content.startsWith("\ufeffDate (UTC+7),")) {
                 callback(callbackId, false, "Invalid CSV report."); return;
             }
             reportContent = content; reportCallback = callbackId; activity.startReportSave(filename);
+        });
+    }
+
+    @JavascriptInterface public void savePublicWallet(String filename, String content, String callbackId) {
+        activity.runOnUiThread(() -> {
+            if (reportCallback != null) { callback(callbackId, false, "Another export is already open."); return; }
+            try {
+                if (filename == null || !filename.matches("GoldWallet-zpub-[A-Za-z0-9_-]+[.]json") || content == null || content.length() > 2000) throw new IllegalArgumentException();
+                JSONObject data = new JSONObject(content);
+                if (!"goldwallet-public-account".equals(data.getString("type")) || !"bc2-mainnet".equals(data.getString("network")) || !"m/84'/0'/0'".equals(data.getString("path")) || !data.getString("zpub").matches("zpub[1-9A-HJ-NP-Za-km-z]{107}")) throw new IllegalArgumentException();
+                JSONObject clean = new JSONObject().put("type", "goldwallet-public-account").put("network", "bc2-mainnet").put("path", "m/84'/0'/0'").put("zpub", data.getString("zpub"));
+                reportContent = clean.toString(2); reportCallback = callbackId; activity.startReportSave(filename, "application/json");
+            } catch (Exception error) { callback(callbackId, false, "Invalid public account export."); }
         });
     }
 
@@ -223,13 +259,13 @@ public final class NativeBridge {
         String id = reportCallback, content = reportContent;
         reportCallback = null; reportContent = null;
         if (id == null) return;
-        if (uri == null) { callback(id, false, "CSV export cancelled."); return; }
+        if (uri == null) { callback(id, false, "Export cancelled."); return; }
         network.execute(() -> {
             try (java.io.OutputStream stream = activity.getContentResolver().openOutputStream(uri, "wt")) {
                 if (stream == null) throw new java.io.IOException("No output stream");
                 stream.write(content.getBytes(StandardCharsets.UTF_8));
                 callback(id, true, "saved");
-            } catch (Exception error) { callback(id, false, "Unable to save CSV report."); }
+            } catch (Exception error) { callback(id, false, "Unable to save export."); }
         });
     }
 
