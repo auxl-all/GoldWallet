@@ -4,9 +4,9 @@ const sats=value=>{if(typeof value!=='number'||!Number.isFinite(value)||value<0)
 const sum=values=>{const n=values.reduce((a,b)=>a+b,0);if(!Number.isSafeInteger(n))throw new Error('Report amount exceeds safe precision.');return n};
 export const reportAmount=value=>{if(!Number.isSafeInteger(value))throw new Error('Invalid report amount.');return `${value<0?'-':''}${Math.floor(Math.abs(value)/1e8)}.${String(Math.abs(value)%1e8).padStart(8,'0')}`};
 
-export function reportMovement({transaction,previousTransactions,height,timestamp},walletScriptHex){
+export function reportMovement({transaction,previousTransactions,height,timestamp},walletScriptHex,walletScriptHexes=[]){
   if(!Array.isArray(transaction.vin)||!Array.isArray(transaction.vout))throw new Error('Transaction details are incomplete.');
-  const own=output=>output?.scriptPubKey?.hex===walletScriptHex;
+  const scripts=new Set(walletScriptHexes.length?walletScriptHexes:[walletScriptHex]),own=output=>scripts.has(output?.scriptPubKey?.hex);
   const outputs=transaction.vout.map(output=>sats(output.value));
   const received=sum(transaction.vout.filter(own).map(output=>sats(output.value)));
   let spent=0,totalInputs=0,foreignInputs=false;
@@ -27,13 +27,13 @@ export function reportMovement({transaction,previousTransactions,height,timestam
   return{txid:transaction.txid,height,date:height>0?reportDate(timestamp*1000):null,incoming,outgoing,fee,net};
 }
 
-export function balanceReport({transactions,walletScriptHex,confirmed,unconfirmed,start,end,now=Date.now()}){
+export function balanceReport({transactions,walletScriptHex,walletScriptHexes=[],confirmed,unconfirmed,start,end,now=Date.now()}){
   const valid=date=>/^\d{4}-\d{2}-\d{2}$/.test(date)&&Number.isFinite(Date.parse(date))&&new Date(Date.parse(date)).toISOString().slice(0,10)===date;
   if(!valid(start)||!valid(end)||start>end||end>reportDate(now))throw new Error('Choose a valid date range ending today or earlier (UTC+7).');
   const count=Math.round((Date.parse(end)-Date.parse(start))/DAY)+1;
   if(count>3660)throw new Error('Choose a period of 10 years or less.');
   if(!Number.isSafeInteger(confirmed)||!Number.isSafeInteger(unconfirmed))throw new Error('Invalid Electrum balance.');
-  const seen=new Set(),events=transactions.map(item=>{if(seen.has(item.transaction.txid))throw new Error('Duplicate transaction in history.');seen.add(item.transaction.txid);return reportMovement(item,walletScriptHex)});
+  const seen=new Set(),events=transactions.map(item=>{if(seen.has(item.transaction.txid))throw new Error('Duplicate transaction in history.');seen.add(item.transaction.txid);return reportMovement(item,walletScriptHex,walletScriptHexes)});
   const settled=events.filter(item=>item.height>0),pending=events.filter(item=>item.height<=0);
   if(sum(settled.map(item=>item.net))!==confirmed||sum(pending.map(item=>item.net))!==unconfirmed)throw new Error('History does not match the wallet balance. Refresh and try again.');
   let balance=sum(settled.filter(item=>item.date<start).map(item=>item.net));

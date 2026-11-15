@@ -75,9 +75,10 @@ public final class MainActivity extends Activity {
         catch (RuntimeException error) { bridge.finishQrError("Unable to open the image picker."); }
     }
 
-    void startReportSave(String filename) {
+    void startReportSave(String filename) { startReportSave(filename, "text/csv"); }
+    void startReportSave(String filename, String mime) {
         Intent picker = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
-            .setType("text/csv").putExtra(Intent.EXTRA_TITLE, filename);
+            .setType(mime).putExtra(Intent.EXTRA_TITLE, filename);
         try { startActivityForResult(picker, REPORT_REQUEST); }
         catch (RuntimeException error) { bridge.finishReportSave(null); }
     }

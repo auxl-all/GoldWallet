@@ -2,6 +2,8 @@
 
 GoldWallet is a non-custodial Android hot wallet for BitcoinII Mainnet. This repository contains both the native Android shell and the unminified wallet source used to generate the bundled web assets.
 
+See [Multiple wallets and HD addresses](docs/MULTI_WALLET.md) for wallet selection, receiving-address creation and authenticated zpub export.
+
 ## Trust boundary
 
 - Recovery words and private keys remain on the device.
@@ -33,7 +35,7 @@ Linux and macOS users should run `./gradlew` instead of `gradlew.bat`. Configure
 
 Each release must publish the source tag, commit, APK SHA-256, Android signing-certificate SHA-256, build inputs, and security status. Follow [BUILD.md](BUILD.md) and [REPRODUCIBLE_BUILD.md](REPRODUCIBLE_BUILD.md).
 
-The current `0.4.7` artifact is a testing build signed by an Android debug certificate. It is not a production-signed release. Back up the 12 recovery words before moving to a future production-signed APK because Android will not install an APK signed by a different key over the debug build.
+The current `0.5.0` artifact is a testing build signed by an Android debug certificate. It is not a production-signed release. Back up the 12 recovery words before moving to a future production-signed APK because Android will not install an APK signed by a different key over the debug build.
 
 ## License
 
